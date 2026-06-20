@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">T3Pay logo</title>
+  <desc id="desc">Minimal blue vector mark for T3Pay.</desc>
+  <rect x="12" y="12" width="104" height="104" rx="28" fill="#4D8DFF"/>
+  <rect x="12.75" y="12.75" width="102.5" height="102.5" rx="27.25" stroke="#0F3C8F" stroke-opacity=".16" stroke-width="1.5"/>
+  <path d="M35 39H93" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M64 39V89" stroke="white" stroke-width="8" stroke-linecap="round"/>
+  <path d="M51 64H74C83.4 64 91 71.6 91 81C91 90.4 83.4 98 74 98H53" stroke="#DCEAFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M52 64H76" stroke="#0F3C8F" stroke-opacity=".22" stroke-width="2" stroke-linecap="round"/>
+</svg>
