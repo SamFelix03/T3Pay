@@ -1,0 +1,37 @@
+/// VaultPay WIT world.
+///
+/// Imports only currently documented tenant-world capabilities:
+/// - tenant-context for tenant DID / contract context
+/// - logging for diagnostics
+/// - kv-store for mandate / agent / audit state
+/// - http and http-with-placeholders for the mocked merchant boundary
+package z:vaultpay@0.1.0;
+
+world vaultpay {
+    import host:tenant/tenant-context@1.0.0;
+    import host:interfaces/logging@2.1.0;
+    import host:interfaces/kv-store@2.1.0;
+    import host:interfaces/http@2.1.0;
+    import host:interfaces/http-with-placeholders@2.1.0;
+
+    export contracts;
+}
+
+interface contracts {
+    record generic-input {
+        input:        option<list<u8>>,
+        user-profile: option<list<u8>>,
+        context:      option<list<u8>>,
+    }
+
+    create-mandate: func(req: generic-input) -> result<list<u8>, string>;
+    read-mandate: func(req: generic-input) -> result<list<u8>, string>;
+    read-remaining: func(req: generic-input) -> result<list<u8>, string>;
+    revoke-mandate: func(req: generic-input) -> result<list<u8>, string>;
+    validate-and-pay: func(req: generic-input) -> result<list<u8>, string>;
+    create-approval-request: func(req: generic-input) -> result<list<u8>, string>;
+    approve-action: func(req: generic-input) -> result<list<u8>, string>;
+    reject-action: func(req: generic-input) -> result<list<u8>, string>;
+    issue-receipt: func(req: generic-input) -> result<list<u8>, string>;
+    verify-receipt: func(req: generic-input) -> result<list<u8>, string>;
+}
