@@ -1,0 +1,32 @@
+{
+  "name": "vaultpay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VaultPay private agent wallet and personal agent governance app.",
+  "type": "commonjs",
+  "scripts": {
+    "dev:backend": "tsx backend/src/server.ts",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "tsc --noEmit",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test:e2e:api": "node scripts/e2e-api.mjs",
+    "test:e2e:frontend-routes": "node scripts/e2e-frontend-routes.mjs",
+    "test": "node --test \"backend/test/**/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "@terminal3/t3n-sdk": "^3.9.0",
+    "dotenv": "^17.4.2",
+    "pino": "^10.3.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,10 @@
+.env
+node_modules/
+dist/
+build/
+target/
+data/
+.DS_Store
+tmp/
+docs/
+frontend/.next/
