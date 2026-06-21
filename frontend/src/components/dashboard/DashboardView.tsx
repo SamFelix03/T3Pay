@@ -2,6 +2,7 @@ import type { AnyRow } from "@/lib/types";
 import type { VaultPayApp } from "@/hooks/useVaultPayApp";
 import { getVaultLabel } from "@/lib/asset-previews";
 import { money, short } from "@/lib/format";
+import { VaultFundingBadges } from "@/components/vault/VaultFundingBadges";
 import { EmptyState, FieldRow, MetricTile, StatusChip } from "@/components/ui/primitives";
 
 type Props = Pick<
@@ -9,6 +10,7 @@ type Props = Pick<
   | "dashboard"
   | "vaults"
   | "agents"
+  | "paymentMethods"
   | "latestApproval"
   | "busy"
   | "setShowCreateVault"
@@ -22,6 +24,7 @@ export function DashboardView({
   dashboard,
   vaults,
   agents,
+  paymentMethods,
   latestApproval,
   busy,
   setShowCreateVault,
@@ -30,13 +33,15 @@ export function DashboardView({
   approveById,
   rejectLatest
 }: Props) {
+  const totals = dashboard?.totals;
+
   return (
     <div className="view-stack">
       <section className="metrics-row">
-        <MetricTile label="Delegated" value={money(dashboard?.totals.delegatedBudgetCents ?? 0)} accent />
-        <MetricTile label="Approvals" value={String(dashboard?.totals.pendingApprovals ?? 0)} />
-        <MetricTile label="Blocked" value={String(dashboard?.totals.blockedAttempts ?? 0)} />
-        <MetricTile label="Agents" value={String(dashboard?.totals.activeAgents ?? 0)} />
+        <MetricTile label="Available balance" value={money(totals?.totalBalanceCents ?? 0)} accent />
+        <MetricTile label="Vaults" value={String(totals?.vaultCount ?? vaults.length)} />
+        <MetricTile label="Pending approvals" value={String(totals?.pendingApprovals ?? 0)} />
+        <MetricTile label="Active agents" value={String(totals?.activeAgents ?? 0)} />
       </section>
 
       {!vaults.length ? (
@@ -98,13 +103,23 @@ export function DashboardView({
           ) : null}
         </div>
         {vaults.length ? (
-          <div className="agent-grid">
-            {vaults.map((vault: AnyRow) => (
-              <article key={String(vault.id)} className="agent-card">
-                <strong>{getVaultLabel(String(vault.id))}</strong>
-                <span>{short(vault.id)}</span>
-              </article>
-            ))}
+          <div className="dashboard-vault-grid">
+            {vaults.map((vault: AnyRow) => {
+              const vaultId = String(vault.id);
+              const methods = paymentMethods.filter((method) => String(method.vault_id) === vaultId);
+              const card = methods.find((method) => method.type === "card");
+              const wallet = methods.find((method) => method.type === "stablecoin");
+              return (
+                <article key={vaultId} className="dashboard-vault-card">
+                  <div className="dashboard-vault-art" aria-hidden />
+                  <div className="dashboard-vault-copy">
+                    <strong>{getVaultLabel(vaultId)}</strong>
+                    <span>{short(vaultId)}</span>
+                    <VaultFundingBadges card={card} wallet={wallet} compact />
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <EmptyState text="Vaults hold the cards and wallets your agents can spend from." />
@@ -150,9 +165,9 @@ export function DashboardView({
         <section className="surface-card compact-insight">
           <span className="section-label">Quick snapshot</span>
           <div className="insight-grid">
-            <FieldRow label="Active agents" value={String(dashboard?.totals.activeAgents ?? 0)} />
-            <FieldRow label="Vaults" value={String(vaults.length)} />
-            <FieldRow label="Pending approvals" value={String(dashboard?.totals.pendingApprovals ?? 0)} />
+            <FieldRow label="Agent budget remaining" value={money(totals?.delegatedBudgetCents ?? 0)} />
+            <FieldRow label="Completed runs" value={String(totals?.completedRuns ?? 0)} />
+            <FieldRow label="Policy denials" value={String(totals?.blockedAttempts ?? 0)} />
           </div>
         </section>
       ) : null}

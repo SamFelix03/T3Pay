@@ -40,14 +40,21 @@ export function registerDashboardRoutes(router: Router): void {
       candidateProducts: JSON.parse(run.candidate_products_json),
       trace: run.trace_json ? JSON.parse(run.trace_json) : null
     }));
-    const blockedAttempts = userId && agents.length > 0
+    const blockedAttempts = agents.length > 0
       ? await app.repo.count("purchase_attempts", {
           in: {
             decision: ["rejected", "revoked", "expired"],
             agent_id: [...agentIds]
           }
         })
-      : await app.repo.count("purchase_attempts", { in: { decision: ["rejected", "revoked", "expired"] } });
+      : 0;
+    const completedRuns = agents.length > 0
+      ? await app.repo.count("agent_runs", { in: { agent_id: [...agentIds] } })
+      : 0;
+    const totalBalanceCents = paymentMethods.reduce(
+      (sum: number, method: any) => sum + Number(method.balance_cents ?? 0),
+      0
+    );
     const vaults = userId
       ? await app.repo.list<any>("vaults", { eq: { user_id: userId }, order: { column: "created_at", ascending: false } })
       : [];
@@ -55,7 +62,10 @@ export function registerDashboardRoutes(router: Router): void {
       activeAgents: agents.filter((agent: any) => agent.status === "active").length,
       delegatedBudgetCents: mandates.reduce((sum: number, mandate: any) => sum + mandate.budget_remaining_cents, 0),
       pendingApprovals: approvals.length,
-      blockedAttempts
+      blockedAttempts,
+      totalBalanceCents,
+      vaultCount: vaults.length,
+      completedRuns
     };
     return { totals, vaults, agents, mandates, paymentMethods, approvals, recentRuns, recentActivity };
   });

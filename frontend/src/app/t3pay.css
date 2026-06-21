@@ -15,8 +15,9 @@
   --vp-success: oklch(0.72 0.17 145);
   --vp-radius: 14px;
   --vp-shadow: 0 16px 48px rgb(0 0 0 / 45%);
-  --page-gutter: clamp(1rem, 7.5vw, 7.5%);
-  --page-max: 1120px;
+  --page-gutter: clamp(1rem, 4vw, 4%);
+  --page-max: 1720px;
+  --nav-gutter: 7.5%;
   --spring-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
   --fluid-easing: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -310,7 +311,7 @@ textarea:focus {
   position: sticky;
   top: 0;
   z-index: 40;
-  padding: 16px var(--page-gutter) 0;
+  padding: 16px var(--nav-gutter) 0;
   background: transparent;
 }
 
@@ -1288,4 +1289,373 @@ textarea:focus {
   background: var(--vp-surface) !important;
   border-color: var(--vp-line) !important;
   color: var(--vp-muted) !important;
+}
+
+/* Asset hub modal */
+.asset-hub-modal {
+  width: min(920px, 96vw);
+  max-width: none;
+  padding: 24px;
+}
+
+.asset-hub-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.asset-hub-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 18px;
+  min-height: 360px;
+}
+
+.asset-hub-list {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.asset-hub-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--vp-line);
+  border-radius: 12px;
+  background: var(--vp-surface);
+  color: inherit;
+  text-align: left;
+}
+
+.asset-hub-item.active {
+  border-color: color-mix(in oklch, var(--vp-blue) 55%, var(--vp-line));
+  background: color-mix(in oklch, var(--vp-blue) 12%, var(--vp-surface));
+}
+
+.asset-hub-item-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.asset-hub-item-copy span {
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+}
+
+.asset-thumb-card,
+.asset-thumb-wallet {
+  height: 46px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.asset-thumb-card {
+  background: linear-gradient(135deg, oklch(0.48 0.14 255), oklch(0.38 0.12 255));
+}
+
+.asset-thumb-chip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  background: oklch(0.78 0.12 85);
+}
+
+.asset-thumb-network,
+.asset-thumb-symbol {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.625rem;
+  opacity: 0.9;
+}
+
+.asset-thumb-digits {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.asset-thumb-wallet {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  color: #e5e7eb;
+}
+
+.asset-thumb-wallet code {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  font-size: 0.625rem;
+}
+
+.asset-hub-empty,
+.asset-hub-empty-detail {
+  display: grid;
+  gap: 12px;
+  place-content: center;
+  min-height: 180px;
+  color: var(--vp-muted);
+  text-align: center;
+}
+
+.asset-hub-detail {
+  border: 1px solid var(--vp-line);
+  border-radius: 14px;
+  background: var(--vp-card);
+  padding: 16px;
+}
+
+.asset-inline-detail {
+  display: grid;
+  gap: 16px;
+  height: 100%;
+}
+
+/* Vault pages */
+.vault-page-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.vault-illustration-grid,
+.dashboard-vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.vault-illustration-card,
+.dashboard-vault-card {
+  border: 1px solid var(--vp-line);
+  border-radius: 16px;
+  background: var(--vp-card);
+  overflow: hidden;
+}
+
+.vault-illustration-card {
+  display: grid;
+}
+
+.dashboard-vault-card {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 0;
+}
+
+.dashboard-vault-art {
+  background:
+    radial-gradient(circle at 30% 20%, oklch(0.58 0.16 255 / 0.35), transparent 55%),
+    linear-gradient(180deg, oklch(0.28 0.07 255), oklch(0.2 0.05 255));
+  min-height: 120px;
+}
+
+.vault-illustration-art {
+  height: 120px;
+  background:
+    radial-gradient(circle at 70% 20%, oklch(0.58 0.16 255 / 0.4), transparent 50%),
+    linear-gradient(180deg, oklch(0.3 0.08 255), oklch(0.18 0.05 255));
+  position: relative;
+}
+
+.vault-illustration-lock {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 2px solid oklch(0.78 0.1 255);
+}
+
+.vault-illustration-door {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 56px;
+  border: 2px solid color-mix(in oklch, var(--vp-blue) 50%, white);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  background: color-mix(in oklch, var(--vp-blue) 18%, transparent);
+}
+
+.vault-illustration-body,
+.dashboard-vault-copy {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.vault-illustration-head {
+  display: grid;
+  gap: 4px;
+}
+
+.vault-illustration-head span,
+.dashboard-vault-copy span {
+  color: var(--vp-muted);
+  font-size: 0.8125rem;
+}
+
+.vault-illustration-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+}
+
+.vault-create-card {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 240px;
+  padding: 24px;
+  border-style: dashed;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.vault-create-card span {
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.vault-create-plus {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--vp-line);
+  font-size: 1.75rem;
+  color: var(--vp-blue-ink);
+}
+
+.vault-funding-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vault-funding-badges.compact .vault-funding-badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.vault-funding-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  font-size: 0.8125rem;
+}
+
+.vault-funding-badge.card {
+  border-color: color-mix(in oklch, var(--vp-blue) 35%, var(--vp-line));
+}
+
+.vault-funding-badge.wallet {
+  border-color: color-mix(in oklch, var(--vp-success) 35%, var(--vp-line));
+}
+
+.vault-funding-empty {
+  color: var(--vp-muted);
+  font-size: 0.8125rem;
+}
+
+/* Marketplace */
+.marketplace-intro h2 {
+  margin: 8px 0;
+}
+
+.marketplace-use-case-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.marketplace-use-case-head h3 {
+  margin: 8px 0;
+}
+
+.marketplace-merchant-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.merchant-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  font-size: 0.8125rem;
+}
+
+.marketplace-service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.marketplace-service-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--vp-line);
+  border-radius: 12px;
+  background: var(--vp-surface);
+}
+
+.marketplace-service-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.marketplace-service-copy span {
+  color: var(--vp-muted);
+  font-size: 0.8125rem;
+}
+
+.marketplace-service-price {
+  color: var(--vp-fg) !important;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .asset-hub-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vault-page-hero,
+  .marketplace-use-case-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

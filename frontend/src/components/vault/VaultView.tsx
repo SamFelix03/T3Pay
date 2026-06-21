@@ -3,62 +3,77 @@
 import type { AnyRow } from "@/lib/types";
 import { getVaultLabel } from "@/lib/asset-previews";
 import { money, short } from "@/lib/format";
-import { FieldRow } from "@/components/ui/primitives";
 
 type Props = {
-  session: { userId: string; userDid: string; displayName: string };
   vaults: AnyRow[];
   paymentMethods: AnyRow[];
-  mandates: AnyRow[];
+  agents: AnyRow[];
+  onCreateVault: () => void;
 };
 
-export function VaultView({ session, vaults, paymentMethods, mandates }: Props) {
+import { VaultFundingBadges } from "@/components/vault/VaultFundingBadges";
+
+export function VaultView({ vaults, paymentMethods, agents, onCreateVault }: Props) {
+  const agentCountByVault = new Map<string, number>();
+  for (const agent of agents) {
+    const vaultId = String(agent.vault_id ?? "");
+    if (!vaultId) continue;
+    agentCountByVault.set(vaultId, (agentCountByVault.get(vaultId) ?? 0) + 1);
+  }
+
   return (
-    <div className="view-stack">
-      <section className="surface-card">
-        <span className="section-label">Account</span>
-        <div className="insight-grid">
-          <FieldRow label="User" value={session.displayName} />
-          <FieldRow label="User DID" value={short(session.userDid)} />
-          <FieldRow label="Vaults" value={String(vaults.length)} />
+    <div className="view-stack vault-page">
+      <section className="vault-page-hero surface-card">
+        <div>
+          <span className="section-label">Vaults</span>
+          <h2>Secure funding compartments</h2>
+          <p>Each vault seals the cards and wallets your agents can spend from under mandate policy.</p>
         </div>
+        <button type="button" className="primary-btn" onClick={onCreateVault}>
+          Create vault
+        </button>
       </section>
 
-      {vaults.map((vault) => {
-        const methods = paymentMethods.filter((method) => String(method.vault_id) === String(vault.id));
-        const card = methods.find((method) => method.type === "card");
-        const wallet = methods.find((method) => method.type === "stablecoin");
-        return (
-          <section key={String(vault.id)} className="surface-card">
-            <span className="section-label">{getVaultLabel(String(vault.id))}</span>
-            <div className="insight-grid three">
-              <FieldRow label="Vault id" value={short(vault.id)} />
-              <FieldRow label="Card" value={card ? money(Number(card.balance_cents ?? 0)) : "—"} />
-              <FieldRow label="Wallet" value={wallet ? money(Number(wallet.balance_cents ?? 0)) : "—"} />
-            </div>
-            <p className="card-note">Use the header Card and Wallet buttons to view sealed credentials.</p>
-          </section>
-        );
-      })}
+      <div className="vault-illustration-grid">
+        {vaults.map((vault) => {
+          const vaultId = String(vault.id);
+          const methods = paymentMethods.filter((method) => String(method.vault_id) === vaultId);
+          const card = methods.find((method) => method.type === "card");
+          const wallet = methods.find((method) => method.type === "stablecoin");
+          const totalBalance = methods.reduce((sum, method) => sum + Number(method.balance_cents ?? 0), 0);
+          const boundAgents = agentCountByVault.get(vaultId) ?? 0;
+
+          return (
+            <article key={vaultId} className="vault-illustration-card">
+              <div className="vault-illustration-art" aria-hidden>
+                <div className="vault-illustration-lock" />
+                <div className="vault-illustration-door" />
+              </div>
+              <div className="vault-illustration-body">
+                <div className="vault-illustration-head">
+                  <strong>{getVaultLabel(vaultId)}</strong>
+                  <span>{short(vaultId)}</span>
+                </div>
+                <VaultFundingBadges card={card} wallet={wallet} />
+                <div className="vault-illustration-meta">
+                  <span>{money(totalBalance)} available</span>
+                  <span>{boundAgents} agent{boundAgents === 1 ? "" : "s"}</span>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+
+        <button type="button" className="vault-illustration-card vault-create-card" onClick={onCreateVault}>
+          <div className="vault-create-plus" aria-hidden>+</div>
+          <strong>Create vault</strong>
+          <span>Seal a card, wallet, or both for agent spending.</span>
+        </button>
+      </div>
 
       {!vaults.length ? (
         <section className="surface-card">
-          <p className="empty-state">No vaults yet. Create one from the dashboard.</p>
-        </section>
-      ) : null}
-
-      {mandates.length ? (
-        <section className="surface-card">
-          <span className="section-label">Mandates</span>
-          <div className="data-table">
-            {mandates.map((mandate) => (
-              <div key={String(mandate.id)} className="data-row">
-                <span>{short(mandate.id)}</span>
-                <span>{String(mandate.status)}</span>
-                <span>{money(Number(mandate.budget_remaining_cents ?? 0))}</span>
-              </div>
-            ))}
-          </div>
+          <p className="empty-state">No vaults yet. Create your first vault to attach demo funding sources.</p>
         </section>
       ) : null}
     </div>

@@ -1,4 +1,4 @@
-export type AppView = "dashboard" | "agent" | "vault" | "agents" | "runs" | "approvals" | "receipts";
+export type AppView = "dashboard" | "agent" | "vault" | "marketplace" | "agents" | "runs" | "approvals" | "receipts";
 export type UseCase = "electronics" | "groceries" | "travel";
 export type PaymentChoice = "card" | "stablecoin";
 export type AssetModal = "card" | "wallet" | null;
@@ -20,6 +20,9 @@ export type Dashboard = {
     delegatedBudgetCents: number;
     pendingApprovals: number;
     blockedAttempts: number;
+    totalBalanceCents: number;
+    vaultCount: number;
+    completedRuns: number;
   };
   vaults: AnyRow[];
   agents: AnyRow[];

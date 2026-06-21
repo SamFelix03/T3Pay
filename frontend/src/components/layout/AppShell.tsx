@@ -1,30 +1,31 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppNavbar } from "@/components/layout/AppNavbar";
-import {
-  AssetPickerModal,
-  CreditCardModal,
-  resolveCardPreview,
-  resolveWalletPreview,
-  WalletModal
-} from "@/components/vault/AssetModals";
+import { AssetHubModal, CreditCardModal, resolveCardPreview, resolveWalletPreview, WalletModal } from "@/components/vault/AssetHubModal";
 import { CreateVaultModal } from "@/components/vault/CreateVaultModal";
 import { CreateAgentModal } from "@/components/agents/CreateAgentModal";
 import { AgentWorkspaceView } from "@/components/agents/AgentWorkspaceView";
 import { DemoWelcomeModal } from "@/components/onboarding/DemoWelcomeModal";
 import { LoginGate } from "@/components/onboarding/LoginGate";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { MarketplaceView } from "@/components/marketplace/MarketplaceView";
 import { VaultView } from "@/components/vault/VaultView";
 import { AgentsView } from "@/components/agents/AgentsView";
 import { RunsView } from "@/components/runs/RunsView";
 import { ApprovalsView } from "@/components/approvals/ApprovalsView";
 import { ReceiptsView } from "@/components/receipts/ReceiptsView";
 import { useVaultPayApp } from "@/hooks/useVaultPayApp";
+import { buildAppUrl, readViewFromSearchParams } from "@/lib/app-navigation";
+import type { AppView } from "@/lib/types";
 
-export function AppShell() {
+function AppShellInner() {
   const app = useVaultPayApp();
-  const [assetPicker, setAssetPicker] = useState<"card" | "wallet" | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [assetHub, setAssetHub] = useState<"card" | "wallet" | null>(null);
+  const [urlReady, setUrlReady] = useState(false);
 
   const selectedCard = useMemo(
     () => app.cards.find((card) => card.id === app.selectedPaymentMethodId) ?? app.cards[0] ?? null,
@@ -35,19 +36,38 @@ export function AppShell() {
     [app.wallets, app.selectedPaymentMethodId]
   );
 
+  const navigate = useCallback(
+    (view: AppView, agentId?: string | null) => {
+      app.setView(view);
+      if (view === "agent" && agentId) app.setSelectedAgentId(agentId);
+      router.replace(buildAppUrl(view, agentId), { scroll: false });
+    },
+    [app, router]
+  );
+
+  useEffect(() => {
+    if (!app.sessionReady || !app.session) return;
+    const { view, agentId } = readViewFromSearchParams(searchParams);
+    if (view === "agent" && agentId) {
+      app.setSelectedAgentId(agentId);
+      app.setView("agent");
+    } else {
+      app.setView(view);
+    }
+    setUrlReady(true);
+  }, [app.sessionReady, app.session, searchParams]);
+
   function handleAssetRequest(kind: "card" | "wallet") {
     const items = kind === "card" ? app.cards : app.wallets;
-    if (!items.length) {
-      if (kind === "card") app.addCard();
-      else app.addWallet();
-      return;
-    }
-    if (items.length === 1) {
+    if (items.length && !app.selectedPaymentMethodId) {
       app.setSelectedPaymentMethodId(String(items[0].id));
-      app.setAssetModal(kind);
-      return;
     }
-    setAssetPicker(kind);
+    setAssetHub(kind);
+  }
+
+  function openAgentWorkspace(agentId: string) {
+    app.setSelectedAgentId(agentId);
+    navigate("agent", agentId);
   }
 
   if (!app.sessionReady) {
@@ -55,9 +75,11 @@ export function AppShell() {
   }
 
   if (!app.session) {
-    return (
-      <LoginGate signIn={app.signIn} signUp={app.signUp} busy={app.busy} />
-    );
+    return <LoginGate signIn={app.signIn} signUp={app.signUp} busy={app.busy} />;
+  }
+
+  if (!urlReady) {
+    return <main className="login-shell" />;
   }
 
   const meta = app.viewMeta[app.view];
@@ -67,7 +89,7 @@ export function AppShell() {
     <div className="app-shell">
       <AppNavbar
         view={app.view}
-        onViewChange={app.setView}
+        onViewChange={(view) => navigate(view)}
         onAssetRequest={handleAssetRequest}
         onLogout={app.logout}
         busy={app.busy}
@@ -88,11 +110,12 @@ export function AppShell() {
               dashboard={app.dashboard}
               vaults={app.vaults}
               agents={app.agents}
+              paymentMethods={app.paymentMethods}
               latestApproval={app.latestApproval}
               busy={app.busy}
               setShowCreateVault={app.setShowCreateVault}
               setShowCreateAgent={app.setShowCreateAgent}
-              openAgentWorkspace={app.openAgentWorkspace}
+              openAgentWorkspace={openAgentWorkspace}
               approveById={app.approveById}
               rejectLatest={app.rejectLatest}
             />
@@ -113,7 +136,10 @@ export function AppShell() {
               useCases={app.useCases}
               runSelectedAgent={app.runSelectedAgent}
               busy={app.busy}
-              setView={app.setView}
+              setView={(view) => {
+                const next = typeof view === "function" ? view(app.view) : view;
+                navigate(next);
+              }}
               runTrace={app.runTrace}
               selectedRunId={app.selectedRunId}
               loadRunTrace={app.loadRunTrace}
@@ -121,17 +147,18 @@ export function AppShell() {
           )}
           {app.view === "vault" && (
             <VaultView
-              session={app.session}
               vaults={app.vaults}
               paymentMethods={app.paymentMethods}
-              mandates={app.dashboard?.mandates ?? []}
+              agents={app.agents}
+              onCreateVault={() => app.setShowCreateVault(true)}
             />
           )}
+          {app.view === "marketplace" && <MarketplaceView products={app.products} />}
           {app.view === "agents" && (
             <AgentsView
               agents={app.agents}
               onRevoke={app.revokeAgent}
-              onOpen={app.openAgentWorkspace}
+              onOpen={openAgentWorkspace}
               busy={app.busy}
             />
           )}
@@ -173,39 +200,27 @@ export function AppShell() {
         onCreate={app.createAgent}
       />
 
-      <AssetPickerModal
-        open={assetPicker === "card"}
+      <AssetHubModal
+        open={assetHub === "card"}
         kind="card"
         items={app.cards}
-        selectedId={selectedCard ? String(selectedCard.id) : null}
-        onSelect={(id) => {
-          app.setSelectedPaymentMethodId(id);
-          setAssetPicker(null);
-          app.setAssetModal("card");
-        }}
-        onAdd={() => {
-          setAssetPicker(null);
-          app.addCard();
-        }}
-        onClose={() => setAssetPicker(null)}
+        selectedId={app.selectedPaymentMethodId}
+        displayName={displayName}
+        onSelect={app.setSelectedPaymentMethodId}
+        onAdd={() => void app.addCard(undefined, { openModal: false })}
+        onClose={() => setAssetHub(null)}
         busy={app.busy}
       />
 
-      <AssetPickerModal
-        open={assetPicker === "wallet"}
+      <AssetHubModal
+        open={assetHub === "wallet"}
         kind="wallet"
         items={app.wallets}
-        selectedId={selectedWallet ? String(selectedWallet.id) : null}
-        onSelect={(id) => {
-          app.setSelectedPaymentMethodId(id);
-          setAssetPicker(null);
-          app.setAssetModal("wallet");
-        }}
-        onAdd={() => {
-          setAssetPicker(null);
-          app.addWallet();
-        }}
-        onClose={() => setAssetPicker(null)}
+        selectedId={app.selectedPaymentMethodId}
+        displayName={displayName}
+        onSelect={app.setSelectedPaymentMethodId}
+        onAdd={() => void app.addWallet(undefined, { openModal: false })}
+        onClose={() => setAssetHub(null)}
         busy={app.busy}
       />
 
@@ -238,5 +253,13 @@ export function AppShell() {
         onClose={() => app.setShowDemoWelcome(false)}
       />
     </div>
+  );
+}
+
+export function AppShell() {
+  return (
+    <Suspense fallback={<main className="login-shell" />}>
+      <AppShellInner />
+    </Suspense>
   );
 }

@@ -23,16 +23,16 @@ import type {
   DemoKit
 } from "@/lib/types";
 
-const USE_CASES: Array<{ id: UseCase; label: string; objective: string }> = [
-  { id: "electronics", label: "Electronics", objective: "Find a useful electronics purchase under policy." },
-  { id: "groceries", label: "Groceries", objective: "Choose groceries that fit the weekly restock budget." },
-  { id: "travel", label: "Travel", objective: "Book travel while respecting approval thresholds." }
-];
+import { MARKETPLACE_USE_CASES } from "@/lib/marketplace";
+import { buildAppUrl } from "@/lib/app-navigation";
+
+const USE_CASES = MARKETPLACE_USE_CASES.map(({ id, label, objective }) => ({ id, label, objective }));
 
 const VIEW_META: Record<AppView, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Your vaults, agents, and spending control." },
   agent: { title: "Agent workspace", subtitle: "Run purchases and review audit activity." },
-  vault: { title: "Vault", subtitle: "Funding sources, mandates, and sealed credentials." },
+  vault: { title: "Vaults", subtitle: "Funding compartments, sealed credentials, and agent bindings." },
+  marketplace: { title: "Marketplace", subtitle: "Use cases and merchant services available to your agents." },
   agents: { title: "Agents", subtitle: "T3N DIDs, scoped ADK grants, and revocation." },
   runs: { title: "Runs", subtitle: "Groq selection rationale and sanitized agent memory." },
   approvals: { title: "Approvals", subtitle: "Pending purchases that need your sign-off." },
@@ -148,7 +148,6 @@ export function useVaultPayApp() {
         setShowDemoWelcome(true);
       }
       await refresh(nextSession.userId);
-      setView("dashboard");
     } finally {
       setBusy(false);
       setSessionReady(true);
@@ -248,7 +247,7 @@ export function useVaultPayApp() {
     return String(result.vault.id);
   }
 
-  async function addCard(vaultId?: string) {
+  async function addCard(vaultId?: string, options?: { openModal?: boolean }) {
     if (!session) return;
     setBusy(true);
     const toastId = toast.loading("Issuing demo card…");
@@ -265,7 +264,7 @@ export function useVaultPayApp() {
       setSelectedPaymentMethodId(String(result.paymentMethod.id));
       toast.success("Demo card added.", toastId);
       await refresh();
-      setAssetModal("card");
+      if (options?.openModal !== false) setAssetModal("card");
     } catch (error) {
       toast.error((error as Error).message, toastId);
     } finally {
@@ -273,7 +272,7 @@ export function useVaultPayApp() {
     }
   }
 
-  async function addWallet(vaultId?: string) {
+  async function addWallet(vaultId?: string, options?: { openModal?: boolean }) {
     if (!session) return;
     setBusy(true);
     const toastId = toast.loading("Creating demo wallet…");
@@ -290,7 +289,7 @@ export function useVaultPayApp() {
       setSelectedPaymentMethodId(String(result.paymentMethod.id));
       toast.success("Demo wallet added.", toastId);
       await refresh();
-      setAssetModal("wallet");
+      if (options?.openModal !== false) setAssetModal("wallet");
     } catch (error) {
       toast.error((error as Error).message, toastId);
     } finally {
@@ -419,11 +418,17 @@ export function useVaultPayApp() {
     }
   }
 
+  function syncTabUrl(nextView: AppView, agentId?: string | null) {
+    if (typeof window === "undefined") return;
+    window.history.replaceState(null, "", buildAppUrl(nextView, agentId));
+  }
+
   function openAgentWorkspace(agentId: string) {
     setSelectedAgentId(agentId);
     setSelectedRunId(null);
     setRunTrace(null);
     setView("agent");
+    syncTabUrl("agent", agentId);
   }
 
   async function loadRunTrace(runId: string) {
@@ -503,6 +508,7 @@ export function useVaultPayApp() {
       if (selectedAgentId === agentId) {
         setSelectedAgentId(null);
         setView("dashboard");
+        syncTabUrl("dashboard");
       }
       await refresh();
     } catch (error) {
@@ -539,6 +545,7 @@ export function useVaultPayApp() {
     view,
     setView,
     selectedAgentId,
+    setSelectedAgentId,
     selectedAgent,
     agentMandate,
     agentActivity,
@@ -567,6 +574,7 @@ export function useVaultPayApp() {
     demoKitBalances,
     latestApproval,
     candidates,
+    products,
     useCases: USE_CASES,
     viewMeta: VIEW_META,
     signIn,
