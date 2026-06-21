@@ -1,9 +1,17 @@
-export type AppView = "dashboard" | "vault" | "agents" | "runs" | "approvals" | "receipts";
+export type AppView = "dashboard" | "agent" | "vault" | "agents" | "runs" | "approvals" | "receipts";
 export type UseCase = "electronics" | "groceries" | "travel";
 export type PaymentChoice = "card" | "stablecoin";
 export type AssetModal = "card" | "wallet" | null;
+export type AgentRole = "shopping_agent" | "research_only" | "travel_agent" | "subscription_agent" | "custom_agent";
+export type AgentPaymentMethod = PaymentChoice | "both";
 
 export type AnyRow = Record<string, unknown>;
+
+export type UserSession = {
+  userId: string;
+  userDid: string;
+  displayName: string;
+};
 
 export type Dashboard = {
   totals: {
@@ -12,6 +20,7 @@ export type Dashboard = {
     pendingApprovals: number;
     blockedAttempts: number;
   };
+  vaults: AnyRow[];
   agents: AnyRow[];
   mandates: AnyRow[];
   paymentMethods: AnyRow[];
@@ -30,19 +39,6 @@ export type Product = {
   currency: string;
 };
 
-export type Workspace = {
-  userId: string;
-  userDid: string;
-  displayName: string;
-  vaultId: string;
-  cardId: string;
-  walletId: string;
-  agentId: string;
-  mandateId: string;
-  cardPreview: MockCard;
-  walletPreview: MockWallet;
-};
-
 export type MockCard = {
   holder: string;
   number: string;
@@ -54,4 +50,44 @@ export type MockCard = {
 export type MockWallet = {
   address: string;
   symbol: string;
+};
+
+export type CreateVaultInput = {
+  label: string;
+  cardMode: "new" | "existing" | "none";
+  walletMode: "new" | "existing" | "none";
+  existingCardId?: string;
+  existingWalletId?: string;
+};
+
+export type CreateAgentInput = {
+  name: string;
+  role: AgentRole;
+  paymentMethod: AgentPaymentMethod;
+  vaultId: string;
+  budgetCents: number;
+  perPurchaseLimitCents: number;
+  approvalThresholdCents: number;
+};
+
+export type RunTraceStep = {
+  seq: number;
+  phase: string;
+  title: string;
+  status: "info" | "success" | "warning" | "error";
+  at: string;
+  detail: Record<string, unknown>;
+};
+
+export type RunTrace = {
+  startedAt: string;
+  completedAt: string;
+  steps: RunTraceStep[];
+};
+
+export type DemoKit = {
+  provisioned: boolean;
+  vaultId?: string;
+  card?: { id: string; display: string; balanceCents: number; currency: string };
+  wallet?: { id: string; display: string; balanceCents: number; currency: string };
 };

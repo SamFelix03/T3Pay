@@ -1,44 +1,34 @@
+import type { AnyRow } from "@/lib/types";
 import type { VaultPayApp } from "@/hooks/useVaultPayApp";
-import { money } from "@/lib/format";
+import { getVaultLabel } from "@/lib/asset-previews";
+import { money, short } from "@/lib/format";
 import { EmptyState, FieldRow, MetricTile, StatusChip } from "@/components/ui/primitives";
 
 type Props = Pick<
   VaultPayApp,
   | "dashboard"
-  | "latestAgent"
-  | "latestMandate"
+  | "vaults"
+  | "agents"
   | "latestApproval"
-  | "candidates"
-  | "paymentChoice"
-  | "setPaymentChoice"
-  | "runUseCase"
-  | "onUseCaseChange"
-  | "objective"
-  | "setObjective"
-  | "useCases"
-  | "runAgent"
-  | "approveLatest"
-  | "rejectLatest"
   | "busy"
+  | "setShowCreateVault"
+  | "setShowCreateAgent"
+  | "openAgentWorkspace"
+  | "approveById"
+  | "rejectLatest"
 >;
 
 export function DashboardView({
   dashboard,
-  latestAgent,
-  latestMandate,
+  vaults,
+  agents,
   latestApproval,
-  candidates,
-  paymentChoice,
-  setPaymentChoice,
-  runUseCase,
-  onUseCaseChange,
-  objective,
-  setObjective,
-  useCases,
-  runAgent,
-  approveLatest,
-  rejectLatest,
-  busy
+  busy,
+  setShowCreateVault,
+  setShowCreateAgent,
+  openAgentWorkspace,
+  approveById,
+  rejectLatest
 }: Props) {
   return (
     <div className="view-stack">
@@ -49,6 +39,35 @@ export function DashboardView({
         <MetricTile label="Agents" value={String(dashboard?.totals.activeAgents ?? 0)} />
       </section>
 
+      {!vaults.length ? (
+        <section className="alert-banner">
+          <div>
+            <strong>You haven&apos;t created any vaults yet.</strong>
+            <p>Seal a card and wallet together, then bind agents to the vault they should spend from.</p>
+          </div>
+          <button type="button" className="primary-btn" onClick={() => setShowCreateVault(true)}>
+            Create your first vault
+          </button>
+        </section>
+      ) : null}
+
+      {!agents.length ? (
+        <section className="alert-banner">
+          <div>
+            <strong>Create your first agent.</strong>
+            <p>Agents get scoped ADK grants and spend from the vault you choose.</p>
+          </div>
+          <button
+            type="button"
+            className="primary-btn"
+            onClick={() => setShowCreateAgent(true)}
+            disabled={!vaults.length}
+          >
+            Create agent
+          </button>
+        </section>
+      ) : null}
+
       {latestApproval ? (
         <section className="surface-card approval-banner">
           <div>
@@ -56,71 +75,87 @@ export function DashboardView({
             <strong>{String(latestApproval.reason ?? "Purchase request")}</strong>
           </div>
           <div className="inline-actions">
-            <button type="button" className="primary-btn" onClick={approveLatest} disabled={busy}>Approve</button>
-            <button type="button" className="ghost-btn" onClick={() => rejectLatest()} disabled={busy}>Reject</button>
+            <button type="button" className="primary-btn" onClick={() => approveById(String(latestApproval.id))} disabled={busy}>
+              Approve
+            </button>
+            <button type="button" className="ghost-btn" onClick={() => rejectLatest()} disabled={busy}>
+              Reject
+            </button>
           </div>
         </section>
       ) : null}
 
-      <section className="surface-card agent-run-card">
+      <section className="surface-card">
         <div className="card-head">
           <div>
-            <span className="section-label">Agent instruction</span>
-            <h2>Run purchase</h2>
+            <span className="section-label">Vaults</span>
+            <h2>{vaults.length ? `${vaults.length} vault${vaults.length === 1 ? "" : "s"}` : "No vaults"}</h2>
           </div>
-          {latestAgent ? <StatusChip value={String(latestAgent.status)} /> : null}
+          {vaults.length ? (
+            <button type="button" className="ghost-btn" onClick={() => setShowCreateVault(true)}>
+              Add vault
+            </button>
+          ) : null}
         </div>
-
-        <div className="composer-grid">
-          <label>
-            Category
-            <select value={runUseCase} onChange={(event) => onUseCaseChange(event.target.value as typeof runUseCase)}>
-              {useCases.map((item) => (
-                <option key={item.id} value={item.id}>{item.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Pay with
-            <select value={paymentChoice} onChange={(event) => setPaymentChoice(event.target.value as typeof paymentChoice)}>
-              <option value="card">Card</option>
-              <option value="stablecoin">USDC</option>
-            </select>
-          </label>
-          <label className="wide">
-            Instruction
-            <textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={2} />
-          </label>
-        </div>
-
-        {candidates.length ? (
-          <div className="candidate-row">
-            {candidates.map((product) => (
-              <span key={product.id}>{product.name} · {money(product.price_cents)}</span>
+        {vaults.length ? (
+          <div className="agent-grid">
+            {vaults.map((vault: AnyRow) => (
+              <article key={String(vault.id)} className="agent-card">
+                <strong>{getVaultLabel(String(vault.id))}</strong>
+                <span>{short(vault.id)}</span>
+              </article>
             ))}
           </div>
-        ) : null}
-
-        <div className="card-foot">
-          <p>Groq picks from eligible products. T3N enforces mandate and never exposes credentials.</p>
-          <button type="button" className="primary-btn" onClick={runAgent} disabled={busy || !latestAgent || !latestMandate}>
-            Start agent
-          </button>
-        </div>
+        ) : (
+          <EmptyState text="Vaults hold the cards and wallets your agents can spend from." />
+        )}
       </section>
 
-      {latestAgent ? (
+      <section className="surface-card">
+        <div className="card-head">
+          <div>
+            <span className="section-label">Agents</span>
+            <h2>{agents.length ? `${agents.length} agent${agents.length === 1 ? "" : "s"}` : "No agents yet"}</h2>
+          </div>
+          {agents.length ? (
+            <button type="button" className="ghost-btn" onClick={() => setShowCreateAgent(true)} disabled={!vaults.length}>
+              Add agent
+            </button>
+          ) : null}
+        </div>
+        {agents.length ? (
+          <div className="agent-grid">
+            {agents.map((agent: AnyRow) => (
+              <button
+                key={String(agent.id)}
+                type="button"
+                className="agent-card clickable"
+                onClick={() => openAgentWorkspace(String(agent.id))}
+              >
+                <div className="agent-card-head">
+                  <strong>{String(agent.name)}</strong>
+                  <StatusChip value={String(agent.status)} />
+                </div>
+                <span>{short(agent.t3n_did)}</span>
+                <span className="agent-card-cta">Open workspace →</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <EmptyState text="Create an agent to run purchases and view audit logs in its workspace." />
+        )}
+      </section>
+
+      {agents.length ? (
         <section className="surface-card compact-insight">
-          <span className="section-label">Authority snapshot</span>
+          <span className="section-label">Quick snapshot</span>
           <div className="insight-grid">
-            <FieldRow label="Agent" value={String(latestAgent.name)} />
-            <FieldRow label="Budget left" value={money(Number(latestMandate?.budget_remaining_cents ?? 0))} />
-            <FieldRow label="Grant" value={((latestAgent.latestGrant as Record<string, unknown> | undefined)?.status as string) ?? "missing"} />
+            <FieldRow label="Active agents" value={String(dashboard?.totals.activeAgents ?? 0)} />
+            <FieldRow label="Vaults" value={String(vaults.length)} />
+            <FieldRow label="Pending approvals" value={String(dashboard?.totals.pendingApprovals ?? 0)} />
           </div>
         </section>
-      ) : (
-        <EmptyState text="Enter the app to create your vault and agent." />
-      )}
+      ) : null}
     </div>
   );
 }

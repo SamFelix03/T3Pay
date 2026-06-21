@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { ReactNode } from "react";
 import type { AppView, AssetModal } from "@/lib/types";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -94,13 +95,24 @@ const PILL_2: Array<{ id: AppView; label: string; icon: () => ReactNode }> = [
 type Props = {
   view: AppView;
   onViewChange: (view: AppView) => void;
-  onAssetOpen: (asset: AssetModal) => void;
+  onAssetRequest: (asset: "card" | "wallet") => void;
   onRefresh: () => void;
   busy: boolean;
   pendingApprovals: number;
+  cardCount: number;
+  walletCount: number;
 };
 
-export function AppNavbar({ view, onViewChange, onAssetOpen, onRefresh, busy, pendingApprovals }: Props) {
+export function AppNavbar({
+  view,
+  onViewChange,
+  onAssetRequest,
+  onRefresh,
+  busy,
+  pendingApprovals,
+  cardCount,
+  walletCount
+}: Props) {
   return (
     <header className="app-navbar">
       <div className="navbar-inner">
@@ -146,13 +158,13 @@ export function AppNavbar({ view, onViewChange, onAssetOpen, onRefresh, busy, pe
           </div>
 
           <div className="nav-pill asset-pill">
-            <button type="button" className="asset-btn" onClick={() => onAssetOpen("card")}>
+            <button type="button" className="asset-btn" onClick={() => onAssetRequest("card")}>
               <CardIcon />
-              <span>Card</span>
+              <span>Card{cardCount ? ` (${cardCount})` : ""}</span>
             </button>
-            <button type="button" className="asset-btn" onClick={() => onAssetOpen("wallet")}>
+            <button type="button" className="asset-btn" onClick={() => onAssetRequest("wallet")}>
               <WalletIcon />
-              <span>Wallet</span>
+              <span>Wallet{walletCount ? ` (${walletCount})` : ""}</span>
             </button>
           </div>
 

@@ -10,11 +10,12 @@ function grantField(agent: AnyRow, key: string): string {
 
 type Props = {
   agents: AnyRow[];
-  onRevoke: () => void;
+  onRevoke: (agentId: string) => void;
+  onOpen?: (agentId: string) => void;
   busy: boolean;
 };
 
-export function AgentsView({ agents, onRevoke, busy }: Props) {
+export function AgentsView({ agents, onRevoke, onOpen, busy }: Props) {
   if (!agents.length) return <EmptyState text="No agents yet." />;
 
   return (
@@ -35,9 +36,18 @@ export function AgentsView({ agents, onRevoke, busy }: Props) {
           </div>
           <div className="card-foot">
             <p>{((agent.latestGrant as AnyRow | undefined)?.functions as string[] | undefined)?.join(", ") || "No scoped functions"}</p>
-            {agent.status !== "revoked" ? (
-              <button type="button" className="ghost-btn danger" onClick={onRevoke} disabled={busy}>Revoke</button>
-            ) : null}
+            <div className="inline-actions">
+              {onOpen ? (
+                <button type="button" className="ghost-btn" onClick={() => onOpen(String(agent.id))} disabled={busy}>
+                  Open workspace
+                </button>
+              ) : null}
+              {agent.status !== "revoked" ? (
+                <button type="button" className="ghost-btn danger" onClick={() => onRevoke(String(agent.id))} disabled={busy}>
+                  Revoke
+                </button>
+              ) : null}
+            </div>
           </div>
         </section>
       ))}

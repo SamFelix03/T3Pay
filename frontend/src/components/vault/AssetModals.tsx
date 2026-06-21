@@ -1,7 +1,62 @@
 "use client";
 
-import type { AnyRow, MockCard, MockWallet } from "@/lib/types";
+import type { AnyRow, AssetModal, MockCard, MockWallet } from "@/lib/types";
+import { getAssetPreview } from "@/lib/asset-previews";
 import { money } from "@/lib/format";
+import { createMockCard, createMockWallet } from "@/lib/mock-assets";
+
+type PickerProps = {
+  open: boolean;
+  kind: "card" | "wallet";
+  items: AnyRow[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onAdd: () => void;
+  onClose: () => void;
+  busy: boolean;
+};
+
+export function AssetPickerModal({ open, kind, items, selectedId, onSelect, onAdd, onClose, busy }: PickerProps) {
+  if (!open) return null;
+
+  const title = kind === "card" ? "Your cards" : "Your wallets";
+
+  return (
+    <div className="modal-overlay" onClick={onClose} role="presentation">
+      <div className="modal-panel form-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+          ×
+        </button>
+        <h2 className="modal-title">{title}</h2>
+        <p className="modal-lead">Select one to view sealed credentials, or add another demo {kind}.</p>
+
+        <div className="asset-picker-list">
+          {items.map((item) => (
+            <button
+              key={String(item.id)}
+              type="button"
+              className={`asset-picker-item ${selectedId === String(item.id) ? "active" : ""}`}
+              onClick={() => onSelect(String(item.id))}
+            >
+              <span>{String(item.alias ?? item.display ?? (kind === "card" ? "Card" : "Wallet"))}</span>
+              <strong>{money(Number(item.balance_cents ?? 0))}</strong>
+            </button>
+          ))}
+          {!items.length ? <p className="empty-state">No {kind === "card" ? "cards" : "wallets"} yet.</p> : null}
+        </div>
+
+        <div className="modal-actions">
+          <button type="button" className="ghost-btn" onClick={onClose}>
+            Close
+          </button>
+          <button type="button" className="primary-btn" onClick={onAdd} disabled={busy}>
+            Add new {kind === "card" ? "card" : "wallet"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Props = {
   open: boolean;
@@ -40,7 +95,9 @@ export function CreditCardModal({ open, card, paymentMethod, onClose }: Props) {
         </div>
         <div className="modal-footer">
           <span>Sealed in T3N · not visible to agents</span>
-          <strong>{paymentMethod?.display ? String(paymentMethod.display) : "Demo card"} · {money(Number(paymentMethod?.balance_cents ?? 0))}</strong>
+          <strong>
+            {paymentMethod?.display ? String(paymentMethod.display) : "Demo card"} · {money(Number(paymentMethod?.balance_cents ?? 0))}
+          </strong>
         </div>
       </div>
     </div>
@@ -82,3 +139,24 @@ export function WalletModal({ open, wallet, paymentMethod, onClose }: WalletProp
     </div>
   );
 }
+
+export function resolveCardPreview(paymentMethod: AnyRow | null, displayName: string): MockCard {
+  if (paymentMethod?.id) {
+    const preview = getAssetPreview(String(paymentMethod.id));
+    if (preview?.type === "card") return preview.card;
+  }
+  return createMockCard(displayName);
+}
+
+export function resolveWalletPreview(paymentMethod: AnyRow | null): MockWallet {
+  if (paymentMethod?.id) {
+    const preview = getAssetPreview(String(paymentMethod.id));
+    if (preview?.type === "stablecoin") return preview.wallet;
+  }
+  return createMockWallet();
+}
+
+export type AssetFlowState = {
+  picker: AssetModal;
+  setPicker: (value: AssetModal) => void;
+};
