@@ -52,7 +52,7 @@ export function registerDashboardRoutes(router: Router): void {
       ? await app.repo.count("agent_runs", { in: { agent_id: [...agentIds] } })
       : 0;
     const totalBalanceCents = paymentMethods.reduce(
-      (sum: number, method: any) => sum + Number(method.balance_cents ?? 0),
+      (sum: number, method: any) => sum + Number(method.balance_cents ?? method.balanceCents ?? 0),
       0
     );
     const vaults = userId

@@ -1,56 +1,44 @@
-import type { AnyRow } from "@/lib/types";
-import { short } from "@/lib/format";
-import { EmptyState, FieldRow, StatusChip } from "@/components/ui/primitives";
+"use client";
 
-function grantField(agent: AnyRow, key: string): string {
-  const grant = agent.latestGrant as AnyRow | undefined;
-  if (!grant?.[key]) return "—";
-  return short(grant[key]);
-}
+import type { AnyRow } from "@/lib/types";
+import { AgentGridCard } from "@/components/agents/AgentGridCard";
+import { EmptyState } from "@/components/ui/primitives";
+import { Plus } from "lucide-react";
 
 type Props = {
   agents: AnyRow[];
+  mandates: AnyRow[];
+  onRun: (agentId: string) => void;
   onRevoke: (agentId: string) => void;
-  onOpen?: (agentId: string) => void;
+  onCreate?: () => void;
   busy: boolean;
 };
 
-export function AgentsView({ agents, onRevoke, onOpen, busy }: Props) {
-  if (!agents.length) return <EmptyState text="No agents yet." />;
+export function AgentsView({ agents, mandates, onRun, onRevoke, onCreate, busy }: Props) {
+  if (!agents.length && !onCreate) return <EmptyState text="No agents yet." />;
 
   return (
-    <div className="view-stack">
+    <div className="agent-page-grid">
       {agents.map((agent) => (
-        <section key={String(agent.id)} className="surface-card">
-          <div className="card-head">
-            <div>
-              <h2>{String(agent.name)}</h2>
-              <p>{short(agent.t3n_did)}</p>
-            </div>
-            <StatusChip value={String(agent.status)} />
-          </div>
-          <div className="insight-grid three">
-            <FieldRow label="App id" value={short(agent.app_agent_id)} />
-            <FieldRow label="Grant" value={grantField(agent, "vcId")} />
-            <FieldRow label="Contract" value={grantField(agent, "contractVersion")} />
-          </div>
-          <div className="card-foot">
-            <p>{((agent.latestGrant as AnyRow | undefined)?.functions as string[] | undefined)?.join(", ") || "No scoped functions"}</p>
-            <div className="inline-actions">
-              {onOpen ? (
-                <button type="button" className="ghost-btn" onClick={() => onOpen(String(agent.id))} disabled={busy}>
-                  Open workspace
-                </button>
-              ) : null}
-              {agent.status !== "revoked" ? (
-                <button type="button" className="ghost-btn danger" onClick={() => onRevoke(String(agent.id))} disabled={busy}>
-                  Revoke
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </section>
+        <AgentGridCard
+          key={String(agent.id)}
+          agent={agent}
+          mandates={mandates}
+          onRun={onRun}
+          onRevoke={onRevoke}
+          busy={busy}
+        />
       ))}
+
+      {onCreate ? (
+        <button type="button" className="agent-grid-card agent-grid-card--create" onClick={onCreate}>
+          <Plus className="agent-create-icon" strokeWidth={1.75} aria-hidden />
+          <strong>Create agent</strong>
+          <span>Bind an agent to a vault with scoped spending policy.</span>
+        </button>
+      ) : null}
+
+      {!agents.length ? <EmptyState text="No agents yet. Create one to start running purchases." /> : null}
     </div>
   );
 }

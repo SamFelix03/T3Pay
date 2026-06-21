@@ -95,14 +95,14 @@ function StoreIcon() {
 const PILL_1: Array<{ id: AppView; label: string; icon: () => ReactNode }> = [
   { id: "dashboard", label: "Dashboard", icon: HomeIcon },
   { id: "vault", label: "Vaults", icon: VaultIcon },
-  { id: "marketplace", label: "Marketplace", icon: StoreIcon }
+  { id: "agents", label: "Agents", icon: BotIcon },
+  { id: "runs", label: "Runs", icon: RunIcon }
 ];
 
 const PILL_2: Array<{ id: AppView; label: string; icon: () => ReactNode }> = [
-  { id: "agents", label: "Agents", icon: BotIcon },
-  { id: "runs", label: "Runs", icon: RunIcon },
   { id: "approvals", label: "Approvals", icon: ApprovalIcon },
-  { id: "receipts", label: "Receipts", icon: ReceiptIcon }
+  { id: "receipts", label: "Receipts", icon: ReceiptIcon },
+  { id: "marketplace", label: "Marketplace", icon: StoreIcon }
 ];
 
 type Props = {
@@ -140,7 +140,7 @@ export function AppNavbar({
                 key={id}
                 type="button"
                 title={label}
-                className={`nav-pill-btn ${view === id ? "active" : ""}`}
+                className={`nav-pill-btn ${view === id || (id === "agents" && view === "agent") ? "active" : ""}`}
                 onClick={() => onViewChange(id)}
               >
                 <Icon />
@@ -154,7 +154,7 @@ export function AppNavbar({
                 key={id}
                 type="button"
                 title={label}
-                className={`nav-pill-btn ${view === id ? "active" : ""}`}
+                className={`nav-pill-btn ${view === id || (id === "agents" && view === "agent") ? "active" : ""}`}
                 onClick={() => onViewChange(id)}
               >
                 <Icon />

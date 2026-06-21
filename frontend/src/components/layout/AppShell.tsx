@@ -113,11 +113,13 @@ function AppShellInner() {
               paymentMethods={app.paymentMethods}
               latestApproval={app.latestApproval}
               busy={app.busy}
-              setShowCreateVault={app.setShowCreateVault}
               setShowCreateAgent={app.setShowCreateAgent}
               openAgentWorkspace={openAgentWorkspace}
+              revokeAgent={app.revokeAgent}
               approveById={app.approveById}
               rejectLatest={app.rejectLatest}
+              onViewAllVaults={() => navigate("vault")}
+              onViewAllAgents={() => navigate("agents")}
             />
           )}
           {app.view === "agent" && (
@@ -158,8 +160,10 @@ function AppShellInner() {
           {app.view === "agents" && (
             <AgentsView
               agents={app.agents}
+              mandates={app.dashboard?.mandates ?? []}
+              onRun={openAgentWorkspace}
               onRevoke={app.revokeAgent}
-              onOpen={openAgentWorkspace}
+              onCreate={() => app.setShowCreateAgent(true)}
               busy={app.busy}
             />
           )}

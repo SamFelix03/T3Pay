@@ -634,6 +634,18 @@ textarea:focus {
   color: var(--vp-blue-ink);
 }
 
+.status-chip.active,
+.status-chip.issued {
+  background: color-mix(in oklch, var(--vp-success) 16%, var(--vp-card));
+  color: oklch(0.78 0.14 145);
+}
+
+.status-chip.no_grant,
+.status-chip.no-grant {
+  background: var(--vp-surface);
+  color: var(--vp-muted);
+}
+
 .status-chip.revoked,
 .status-chip.rejected {
   background: color-mix(in oklch, var(--vp-danger) 18%, var(--vp-card));
@@ -860,6 +872,155 @@ textarea:focus {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
+}
+
+.agent-page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.agent-page-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.agent-grid-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--vp-line);
+  border-radius: 16px;
+  background: var(--vp-card);
+  text-align: center;
+}
+
+.agent-grid-card-brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--vp-surface);
+  border: 1px solid var(--vp-line);
+}
+
+.agent-grid-card-brand-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--vp-blue-ink);
+}
+
+.agent-grid-card-did {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: var(--vp-muted);
+  word-break: break-all;
+}
+
+.agent-grid-card-budget {
+  display: grid;
+  gap: 4px;
+}
+
+.agent-grid-card-budget span {
+  font-size: 0.75rem;
+  color: var(--vp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agent-grid-card-budget strong {
+  font-size: 1.125rem;
+}
+
+.agent-grid-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.agent-payment-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+}
+
+.agent-payment-badge.card {
+  border-color: color-mix(in oklch, var(--vp-blue) 35%, var(--vp-line));
+}
+
+.agent-payment-badge.stablecoin {
+  border-color: color-mix(in oklch, var(--vp-success) 30%, var(--vp-line));
+}
+
+.agent-payment-badge-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--vp-muted);
+}
+
+.agent-grid-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.agent-run-btn,
+.agent-revoke-btn {
+  min-width: 0;
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+}
+
+.agent-grid-card-spacer {
+  flex: 1;
+}
+
+.agent-grid-card--create {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 220px;
+  border-style: dashed;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  color: inherit;
+  font: inherit;
+  appearance: none;
+}
+
+.agent-grid-card--create strong {
+  font-size: 1rem;
+  width: 100%;
+}
+
+.agent-grid-card--create span {
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+  max-width: 24ch;
+  margin: 0 auto;
+  display: block;
+}
+
+.agent-create-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--vp-blue-ink);
+  flex-shrink: 0;
 }
 
 .agent-card {
