@@ -28,6 +28,7 @@ create table if not exists payment_methods (
 create table if not exists agents (
   id text primary key,
   user_id text not null references users(id),
+  vault_id text references vaults(id),
   app_agent_id text not null unique,
   t3n_did text not null,
   agent_did_source text not null default 'derived_adk_eth',
@@ -184,10 +185,12 @@ create table if not exists agent_runs (
   purchase_attempt_id text,
   receipt_id text,
   status text not null,
+  trace_json text,
   created_at timestamptz not null
 );
 
 create index if not exists agents_user_id_idx on agents(user_id);
+create index if not exists agents_vault_id_idx on agents(vault_id);
 create index if not exists delegations_agent_id_idx on delegations(agent_id);
 create index if not exists delegations_mandate_id_idx on delegations(mandate_id);
 create index if not exists mandates_user_id_idx on mandates(user_id);

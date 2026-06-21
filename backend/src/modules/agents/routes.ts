@@ -10,6 +10,7 @@ const createAgentSchema = z.object({
   name: z.string().min(1),
   role: z.enum(ROLES).default("shopping_agent"),
   paymentMethod: z.enum(PAYMENT_METHODS).default("both"),
+  vaultId: z.string().min(1),
   t3nDid: z.string().min(1).optional(),
   agentPublicKeyB64u: z.string().min(1).optional()
 });
@@ -30,6 +31,8 @@ export function registerAgentRoutes(router: Router): void {
   router.post("/api/agents", async ({ req, app }) => {
     const body = await readJson(req, createAgentSchema);
     await app.repo.getById("users", body.userId, "user");
+    const vault = await app.repo.getById<any>("vaults", body.vaultId, "vault");
+    if (vault.user_id !== body.userId) throw new Error("vault does not belong to user");
     const agentId = id("agt");
     const appAgentId = id("appagt");
     const now = nowIso();
@@ -39,6 +42,7 @@ export function registerAgentRoutes(router: Router): void {
     const agent = await app.repo.insert("agents", {
       id: agentId,
       user_id: body.userId,
+      vault_id: body.vaultId,
       app_agent_id: appAgentId,
       t3n_did: identity.did,
       agent_did_source: identity.source,

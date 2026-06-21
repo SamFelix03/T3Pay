@@ -54,6 +54,7 @@ export function registerDemoRoutes(router: Router): void {
     await app.repo.insert("agents", {
       id: agentId,
       user_id: userId,
+      vault_id: vaultId,
       app_agent_id: appAgentId,
       t3n_did: agentIdentity.did,
       agent_did_source: agentIdentity.source,

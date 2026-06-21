@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { Router, readJson } from "../../http/router";
 import { id } from "../../domain/ids";
+import { notFound } from "../../domain/errors";
 import { nowIso } from "../shared";
 import { writeAudit } from "../activity/service";
+import { provisionDemoStarterKit } from "../vaults/provision";
 
 const sessionSchema = z.object({
   displayName: z.string().min(1).default("VaultPay User"),
@@ -24,6 +26,17 @@ export function registerUserRoutes(router: Router): void {
       entityId: userId,
       payload: { userId, didMode: "t3n_user_did_with_separate_agent_dids" }
     });
-    return { user: { id: userId, did, displayName: body.displayName, createdAt } };
+    const demoKit = await provisionDemoStarterKit(app.repo, userId);
+    return {
+      user: { id: userId, did, displayName: body.displayName, createdAt },
+      demoKit
+    };
+  });
+
+  router.post("/api/users/:userId/ensure-demo-kit", async ({ params, app }) => {
+    const user = await app.repo.maybeById<any>("users", params.userId);
+    if (!user) throw notFound("user");
+    const demoKit = await provisionDemoStarterKit(app.repo, params.userId);
+    return { demoKit };
   });
 }
