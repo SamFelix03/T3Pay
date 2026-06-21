@@ -77,19 +77,19 @@ export class VaultpayT3nGateway {
 
   async createMandate(record: CompactMandateRecord): Promise<CompactMandateRecord> {
     assertContractRecordSize("mandate", record);
-    const created = await this.execute<CompactMandateRecord>("create-mandate", { mandate: record });
+    const created = await this.executeAsUser<CompactMandateRecord>("create-mandate", { mandate: record });
     await this.writeMapValue(T3N_MAP_TAILS.mandates, created.id, JSON.stringify(created));
     return created;
   }
 
   async revokeMandate(mandateId: string): Promise<CompactMandateRecord> {
-    const revoked = await this.execute<CompactMandateRecord>("revoke-mandate", { mandate_id: mandateId });
+    const revoked = await this.executeAsUser<CompactMandateRecord>("revoke-mandate", { mandate_id: mandateId });
     await this.writeMapValue(T3N_MAP_TAILS.mandates, revoked.id, JSON.stringify(revoked));
     return revoked;
   }
 
   async readMandate(mandateId: string): Promise<CompactMandateRecord> {
-    return this.execute<CompactMandateRecord>("read-mandate", { mandate_id: mandateId });
+    return this.executeAsUser<CompactMandateRecord>("read-mandate", { mandate_id: mandateId });
   }
 
   async validateAndPay(input: {
@@ -104,7 +104,7 @@ export class VaultpayT3nGateway {
     amountCents: number;
     paymentMethod: PaymentMethod;
   }): Promise<T3nPolicyDecision> {
-    return this.execute<T3nPolicyDecision>("validate-and-pay", {
+    return this.executeAsUser<T3nPolicyDecision>("validate-and-pay", {
       mandate_id: input.mandateId,
       ...(input.approvalId ? { approval_id: input.approvalId } : {}),
       app_agent_id: input.appAgentId,
@@ -116,6 +116,130 @@ export class VaultpayT3nGateway {
       amount_cents: input.amountCents,
       payment_method: input.paymentMethod
     });
+  }
+
+  async authenticateAgent(appAgentId: string, expectedDid?: string): Promise<{
+    did: string;
+    address: string;
+    appAgentId: string;
+    publicKeyB64u: string;
+    t3n: any;
+  }> {
+    const { createEthAuthInput, eth_get_address } = await import("@terminal3/t3n-sdk");
+    const { secret, privateKey } = this.deriveAgentSecret(appAgentId);
+    const address = eth_get_address(privateKey);
+    const t3n = await this.createT3nClient(address, privateKey);
+    await t3n.handshake();
+    const did = (await t3n.authenticate(createEthAuthInput(address))).value;
+    if (expectedDid && did !== expectedDid) {
+      throw badRequest(`agent DID mismatch: expected ${expectedDid}, got ${did}`);
+    }
+    return {
+      did,
+      address,
+      appAgentId,
+      publicKeyB64u: await encodeB64u(compressedPublicKey(secret)),
+      t3n
+    };
+  }
+
+  async validateAndPayAsAgent(input: {
+    appAgentId: string;
+    agentDid: string;
+    userDid: string;
+    mandateId: string;
+    approvalId?: string;
+    delegationId?: string;
+    delegationVcId?: string;
+    merchantId: string;
+    category: string;
+    amountCents: number;
+    paymentMethod: PaymentMethod;
+    grant?: {
+      contractName?: string | null;
+      contractVersion?: string | null;
+      functions?: string[] | null;
+      allowedHosts?: string[] | null;
+      vcId?: string | null;
+    };
+  }): Promise<{
+    decision: T3nPolicyDecision;
+    invocation: Record<string, unknown>;
+    agentDid: string;
+    audit: unknown;
+    contractLogs: unknown;
+  }> {
+    const agentAuth = await this.authenticateAgent(input.appAgentId, input.agentDid);
+    const payload = {
+      mandate_id: input.mandateId,
+      ...(input.approvalId ? { approval_id: input.approvalId } : {}),
+      app_agent_id: input.appAgentId,
+      agent_did: input.agentDid,
+      ...(input.delegationId ? { delegation_id: input.delegationId } : {}),
+      ...(input.delegationVcId ? { delegation_vc_id: input.delegationVcId } : {}),
+      merchant_id: input.merchantId,
+      category: input.category,
+      amount_cents: input.amountCents,
+      payment_method: input.paymentMethod
+    };
+
+    const { TenantClient } = await import("@terminal3/t3n-sdk");
+    const { baseUrl } = await this.getClients();
+    const userTenantForAgent = new TenantClient({
+      environment: this.env.t3nEnvironment as "testnet" | "production",
+      baseUrl,
+      endpoint: baseUrl,
+      t3n: agentAuth.t3n,
+      tenantDid: input.userDid
+    });
+
+    let decision: T3nPolicyDecision;
+    let invocationMode = "agent_delegated_execute_business_contract";
+    let fallbackReason: string | null = null;
+    try {
+      decision = await withT3nRetry(() =>
+        userTenantForAgent.executeBusinessContract<T3nPolicyDecision>(agentAuth.t3n, {
+          tenant: input.userDid,
+          contract: this.env.vaultpayContractTail,
+          functionName: "validate-and-pay",
+          input: payload
+        })
+      );
+    } catch (error) {
+      invocationMode = "agent_authenticated_user_tenant_execute_fallback";
+      fallbackReason = error instanceof Error ? error.message : String(error);
+      decision = await this.validateAndPay({
+        mandateId: input.mandateId,
+        approvalId: input.approvalId,
+        appAgentId: input.appAgentId,
+        agentDid: input.agentDid,
+        delegationId: input.delegationId,
+        delegationVcId: input.delegationVcId,
+        merchantId: input.merchantId,
+        category: input.category,
+        amountCents: input.amountCents,
+        paymentMethod: input.paymentMethod
+      });
+    }
+
+    const proof = await this.getAgentProof(agentAuth.did);
+    return {
+      decision,
+      agentDid: agentAuth.did,
+      audit: proof.audit,
+      contractLogs: proof.logs,
+      invocation: {
+        mode: invocationMode,
+        fallbackReason,
+        actorDid: agentAuth.did,
+        userDid: input.userDid,
+        contractTail: this.env.vaultpayContractTail,
+        contractVersion: this.env.vaultpayContractVersion,
+        functionName: "validate-and-pay",
+        grant: input.grant ?? null,
+        request: payload
+      }
+    };
   }
 
   async createAgentIdentity(appAgentId: string): Promise<{
@@ -303,32 +427,32 @@ export class VaultpayT3nGateway {
 
   async createApproval(record: CompactApprovalRecord): Promise<CompactApprovalRecord> {
     assertContractRecordSize("approval", record);
-    const created = await this.execute<CompactApprovalRecord>("create-approval-request", { approval: record });
+    const created = await this.executeAsUser<CompactApprovalRecord>("create-approval-request", { approval: record });
     await this.writeMapValue(T3N_MAP_TAILS.approvals, created.id, JSON.stringify(created));
     return created;
   }
 
   async approveAction(approvalId: string): Promise<CompactApprovalRecord> {
-    const approved = await this.execute<CompactApprovalRecord>("approve-action", { approval_id: approvalId });
+    const approved = await this.executeAsUser<CompactApprovalRecord>("approve-action", { approval_id: approvalId });
     await this.writeMapValue(T3N_MAP_TAILS.approvals, approved.id, JSON.stringify(approved));
     return approved;
   }
 
   async rejectAction(approvalId: string): Promise<CompactApprovalRecord> {
-    const rejected = await this.execute<CompactApprovalRecord>("reject-action", { approval_id: approvalId });
+    const rejected = await this.executeAsUser<CompactApprovalRecord>("reject-action", { approval_id: approvalId });
     await this.writeMapValue(T3N_MAP_TAILS.approvals, rejected.id, JSON.stringify(rejected));
     return rejected;
   }
 
   async issueReceipt(record: CompactReceiptRecord): Promise<CompactReceiptRecord> {
     assertContractRecordSize("receipt", record);
-    const receipt = await this.execute<CompactReceiptRecord>("issue-receipt", { receipt: record });
+    const receipt = await this.executeAsUser<CompactReceiptRecord>("issue-receipt", { receipt: record });
     await this.writeMapValue(T3N_MAP_TAILS.receipts, receipt.id, JSON.stringify(receipt));
     return receipt;
   }
 
   async verifyReceipt(record: CompactReceiptRecord): Promise<{ valid: boolean; receipt_id: string }> {
-    return this.execute("verify-receipt", { receipt: record });
+    return this.executeAsUser("verify-receipt", { receipt: record });
   }
 
   async writeMapValue(mapTail: string, key: string, value: string): Promise<void> {
@@ -342,7 +466,7 @@ export class VaultpayT3nGateway {
     );
   }
 
-  private async execute<T>(functionName: string, input: Record<string, unknown>): Promise<T> {
+  private async executeAsUser<T>(functionName: string, input: Record<string, unknown>): Promise<T> {
     const { tenant } = await this.getClients();
     const result = await withT3nRetry(() =>
       tenant.contracts.execute(this.env.vaultpayContractTail, {

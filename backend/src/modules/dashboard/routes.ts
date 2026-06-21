@@ -37,7 +37,8 @@ export function registerDashboardRoutes(router: Router): void {
       : await app.repo.list<any>("payment_methods", { select: "id,vault_id,type,alias,display,balance_cents,currency,status,created_at", order: { column: "created_at", ascending: false } });
     const recentRuns = rawRuns.map((run: any) => ({
       ...run,
-      candidateProducts: JSON.parse(run.candidate_products_json)
+      candidateProducts: JSON.parse(run.candidate_products_json),
+      trace: run.trace_json ? JSON.parse(run.trace_json) : null
     }));
     const blockedAttempts = userId && agents.length > 0
       ? await app.repo.count("purchase_attempts", {
@@ -47,13 +48,16 @@ export function registerDashboardRoutes(router: Router): void {
           }
         })
       : await app.repo.count("purchase_attempts", { in: { decision: ["rejected", "revoked", "expired"] } });
+    const vaults = userId
+      ? await app.repo.list<any>("vaults", { eq: { user_id: userId }, order: { column: "created_at", ascending: false } })
+      : [];
     const totals = {
       activeAgents: agents.filter((agent: any) => agent.status === "active").length,
       delegatedBudgetCents: mandates.reduce((sum: number, mandate: any) => sum + mandate.budget_remaining_cents, 0),
       pendingApprovals: approvals.length,
       blockedAttempts
     };
-    return { totals, agents, mandates, paymentMethods, approvals, recentRuns, recentActivity };
+    return { totals, vaults, agents, mandates, paymentMethods, approvals, recentRuns, recentActivity };
   });
 }
 

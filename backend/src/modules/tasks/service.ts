@@ -4,7 +4,8 @@ import { id } from "../../domain/ids";
 import { issueReceipt } from "../receipts/service";
 import { asJson, nowIso } from "../shared";
 import { writeAudit } from "../activity/service";
-import { VaultpayT3nGateway } from "../t3n/gateway";
+import type { T3nPolicyDecision, VaultpayT3nGateway } from "../t3n/gateway";
+import type { RunTrace } from "../agent-runs/trace";
 
 export type AgentTaskInput = {
   agentId: string;
@@ -15,7 +16,20 @@ export type AgentTaskInput = {
   reason: string;
 };
 
-export async function runAgentTask(repo: SupabaseRepository, t3n: VaultpayT3nGateway, input: AgentTaskInput) {
+type RunAgentTaskOptions = {
+  trace?: RunTrace;
+  userDid?: string;
+  prevalidatedDecision?: T3nPolicyDecision;
+  t3nInvocation?: Record<string, unknown>;
+};
+
+export async function runAgentTask(
+  repo: SupabaseRepository,
+  t3n: VaultpayT3nGateway,
+  input: AgentTaskInput,
+  options: RunAgentTaskOptions = {}
+) {
+  const { trace, prevalidatedDecision } = options;
   return repo.mutate(async () => {
     const agent = await repo.getById<any>("agents", input.agentId, "agent");
     const mandate = await repo.getById<any>("mandates", input.mandateId, "mandate");
@@ -24,10 +38,27 @@ export async function runAgentTask(repo: SupabaseRepository, t3n: VaultpayT3nGat
     const product = await repo.getById<any>("products", input.productId, "product");
     if (product.merchant_id !== input.merchantId) throw conflict("product does not belong to merchant");
     const paymentMethod = await repo.getById<any>("payment_methods", input.paymentMethodId, "payment method");
+
     const appDecision = decideAppOnly({ agent, mandate, paymentMethod, delegation });
-    const decision =
-      appDecision ??
-      (await t3n.validateAndPay({
+    if (appDecision) {
+      trace?.step("policy", `App policy rejected before settlement: ${appDecision.reason}`, appDecision, "error");
+    }
+
+    let decision: T3nPolicyDecision | { decision: string; reason: string | null };
+    if (appDecision) {
+      decision = appDecision;
+    } else if (prevalidatedDecision) {
+      trace?.step("policy", "Using agent-authenticated T3N decision from prior step", {
+        decision: prevalidatedDecision,
+        invocation: options.t3nInvocation ?? null
+      });
+      decision = prevalidatedDecision;
+    } else {
+      trace?.step("t3n", "Invoking validate-and-pay as user tenant (legacy path)", {
+        mandateId: mandate.t3n_record_key,
+        agentDid: agent.t3n_did
+      });
+      decision = await t3n.validateAndPay({
         mandateId: mandate.t3n_record_key,
         appAgentId: agent.app_agent_id,
         agentDid: agent.t3n_did,
@@ -37,10 +68,18 @@ export async function runAgentTask(repo: SupabaseRepository, t3n: VaultpayT3nGat
         category: product.category,
         amountCents: product.price_cents,
         paymentMethod: concretePaymentMethod(paymentMethod.type)
-      }));
+      });
+      trace?.step("t3n", `T3N policy decision: ${decision.decision}`, { decision });
+    }
 
     if (decision.decision !== "approved") {
-      const approvalId = decision.decision === "pending_approval" ? await createApproval(repo, t3n, { input, agent, mandate, product, paymentMethod, delegation }) : null;
+      const approvalId =
+        decision.decision === "pending_approval"
+          ? await createApproval(repo, t3n, { input, agent, mandate, product, paymentMethod, delegation })
+          : null;
+      if (approvalId) {
+        trace?.warning("approval", "Purchase requires user approval", { approvalId });
+      }
       const attempt = await recordAttempt(repo, {
         input,
         agent,
@@ -57,6 +96,11 @@ export async function runAgentTask(repo: SupabaseRepository, t3n: VaultpayT3nGat
           agentMemory: agentMemory(input, product)
         }
       });
+      trace?.step("settlement", "Recorded non-approved purchase attempt", {
+        attemptId: attempt.id,
+        decision: attempt.decision,
+        reason: attempt.reason
+      });
       await writeAudit(repo, {
         userId: agent.user_id,
         agentId: agent.id,
@@ -69,7 +113,21 @@ export async function runAgentTask(repo: SupabaseRepository, t3n: VaultpayT3nGat
       return { attempt };
     }
 
-    return executeApprovedPurchase(repo, t3n, { input, agent, mandate, product, paymentMethod, delegation, contractDecision: decision });
+    trace?.step("settlement", "T3N approved — finalizing mock payment", {
+      productId: product.id,
+      amountCents: product.price_cents,
+      paymentMethodId: paymentMethod.id
+    });
+    return executeApprovedPurchase(repo, t3n, {
+      input,
+      agent,
+      mandate,
+      product,
+      paymentMethod,
+      delegation,
+      contractDecision: decision,
+      trace
+    });
   });
 }
 
@@ -108,11 +166,13 @@ export async function resumeApprovedTask(repo: SupabaseRepository, t3n: Vaultpay
     }
     const payload = JSON.parse(approval.payload_json);
     const { input, agent, mandate, product, paymentMethod, delegation } = payload;
-    const decision = await t3n.validateAndPay({
-      mandateId: mandate.t3n_record_key,
-      approvalId,
+    const user = await repo.getById<any>("users", agent.user_id, "user");
+    const t3nResult = await t3n.validateAndPayAsAgent({
       appAgentId: agent.app_agent_id,
       agentDid: agent.t3n_did,
+      userDid: user.did,
+      mandateId: mandate.t3n_record_key,
+      approvalId,
       delegationId: delegation?.id,
       delegationVcId: delegation?.t3n_vc_id,
       merchantId: product.merchant_id,
@@ -120,6 +180,7 @@ export async function resumeApprovedTask(repo: SupabaseRepository, t3n: Vaultpay
       amountCents: product.price_cents,
       paymentMethod: concretePaymentMethod(paymentMethod.type)
     });
+    const decision = t3nResult.decision;
     if (decision.decision !== "approved") {
       const attempt = await recordAttempt(repo, {
         input,
@@ -139,8 +200,12 @@ export async function resumeApprovedTask(repo: SupabaseRepository, t3n: Vaultpay
 }
 
 async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3nGateway, data: any) {
-  const { input, agent, mandate, product, paymentMethod } = data;
+  const { input, agent, mandate, product, paymentMethod, trace } = data;
   if (paymentMethod.balance_cents < product.price_cents) {
+    trace?.error("settlement", "Insufficient mock payment balance", {
+      balanceCents: paymentMethod.balance_cents,
+      requiredCents: product.price_cents
+    });
     return {
       attempt: await recordAttempt(repo, {
         input,
@@ -164,10 +229,16 @@ async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3
   const receiptId = id("rcp");
   const createdAt = nowIso();
   const t3nMandate = await t3n.readMandate(mandate.t3n_record_key);
+  trace?.step("t3n", "Read mandate from T3N before budget deduction", { mandate: t3nMandate });
   const updatedT3nMandate = await t3n.createMandate({
     ...t3nMandate,
     r: t3nMandate.r - product.price_cents,
     h: undefined
+  });
+  trace?.step("t3n", "Updated mandate remaining budget on T3N", {
+    previousRemainingCents: t3nMandate.r,
+    newRemainingCents: updatedT3nMandate.r,
+    mandateHash: updatedT3nMandate.h ?? mandate.mandate_hash
   });
   const receipt = await issueReceipt(repo, t3n, {
     receiptId,
@@ -179,6 +250,11 @@ async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3
     currency: product.currency,
     orderId,
     mandateHash: updatedT3nMandate.h ?? mandate.mandate_hash
+  });
+  trace?.success("receipt", "Issued verifiable receipt", {
+    receiptId: receipt.id,
+    receiptHash: receipt.receiptHash,
+    receiptType: receipt.receiptType
   });
   const sanitizedResponse = { status: "approved", orderId, agentMemory: agentMemory(input, product) };
   const finalized = await repo.rpc<any>("vaultpay_finalize_purchase", {
@@ -202,6 +278,12 @@ async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3
     p_created_at: createdAt
   });
   const attempt = decodeAttemptRow(finalized.attempt);
+  trace?.success("settlement", "Mock balances and inventory finalized atomically", {
+    attemptId: attempt.id,
+    orderId,
+    paymentMethodId: input.paymentMethodId,
+    deductedCents: product.price_cents
+  });
   await writeAudit(repo, {
     userId: agent.user_id,
     agentId: agent.id,
@@ -216,6 +298,10 @@ async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3
 
 function decideAppOnly(input: { agent: any; mandate: any; paymentMethod: any; delegation: any }): { decision: string; reason: string } | null {
   const { agent, mandate, paymentMethod, delegation } = input;
+  if (!agent.vault_id) return { decision: "rejected", reason: "agent_vault_not_assigned" };
+  if (String(paymentMethod.vault_id) !== String(agent.vault_id)) {
+    return { decision: "rejected", reason: "payment_method_vault_mismatch" };
+  }
   if (agent.status === "revoked") return { decision: "revoked", reason: "agent_revoked" };
   if (agent.status === "paused") return { decision: "rejected", reason: "agent_paused" };
   if (!delegation) return { decision: "revoked", reason: "agent_grant_missing" };
