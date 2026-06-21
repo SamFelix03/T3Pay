@@ -24,8 +24,3 @@ export function FieldRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-export function StatusBanner({ message, tone = "neutral" }: { message: string; tone?: "neutral" | "error" | "success" }) {
-  if (!message) return null;
-  return <p className={`status-banner ${tone}`}>{message}</p>;
-}

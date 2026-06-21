@@ -11,8 +11,8 @@ export function BrandLogo({ variant = "nav", className = "" }: Props) {
     <Image
       src="/logo.png"
       alt="T3Pay"
-      width={isHero ? 220 : 120}
-      height={isHero ? 64 : 36}
+      width={isHero ? 200 : 176}
+      height={isHero ? 56 : 48}
       className={`brand-logo-image ${isHero ? "hero" : "nav"} ${className}`.trim()}
       priority
     />
