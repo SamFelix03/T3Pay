@@ -150,6 +150,7 @@ function AppShellInner() {
               vaults={app.vaults}
               paymentMethods={app.paymentMethods}
               agents={app.agents}
+              displayName={displayName}
               onCreateVault={() => app.setShowCreateVault(true)}
             />
           )}
@@ -186,6 +187,7 @@ function AppShellInner() {
         open={app.showCreateVault}
         cards={app.cards}
         wallets={app.wallets}
+        displayName={displayName}
         busy={app.busy}
         onClose={() => app.setShowCreateVault(false)}
         onCreate={app.createVault}

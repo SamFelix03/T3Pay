@@ -1,8 +1,9 @@
 import type { AnyRow } from "@/lib/types";
 import type { VaultPayApp } from "@/hooks/useVaultPayApp";
 import { getVaultLabel } from "@/lib/asset-previews";
+import { fundingForVault } from "@/lib/vault-funding";
 import { money, short } from "@/lib/format";
-import { VaultFundingBadges } from "@/components/vault/VaultFundingBadges";
+import { VaultGridCard } from "@/components/vault/VaultGridCard";
 import { EmptyState, FieldRow, MetricTile, StatusChip } from "@/components/ui/primitives";
 
 type Props = Pick<
@@ -103,21 +104,18 @@ export function DashboardView({
           ) : null}
         </div>
         {vaults.length ? (
-          <div className="dashboard-vault-grid">
+          <div className="vault-grid vault-grid--compact">
             {vaults.map((vault: AnyRow) => {
               const vaultId = String(vault.id);
-              const methods = paymentMethods.filter((method) => String(method.vault_id) === vaultId);
-              const card = methods.find((method) => method.type === "card");
-              const wallet = methods.find((method) => method.type === "stablecoin");
+              const funding = fundingForVault(paymentMethods, vaultId);
               return (
-                <article key={vaultId} className="dashboard-vault-card">
-                  <div className="dashboard-vault-art" aria-hidden />
-                  <div className="dashboard-vault-copy">
-                    <strong>{getVaultLabel(vaultId)}</strong>
-                    <span>{short(vaultId)}</span>
-                    <VaultFundingBadges card={card} wallet={wallet} compact />
-                  </div>
-                </article>
+                <VaultGridCard
+                  key={vaultId}
+                  vaultId={vaultId}
+                  label={getVaultLabel(vaultId)}
+                  card={funding.card}
+                  wallet={funding.wallet}
+                />
               );
             })}
           </div>

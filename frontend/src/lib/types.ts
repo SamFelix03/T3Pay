@@ -58,10 +58,8 @@ export type MockWallet = {
 
 export type CreateVaultInput = {
   label: string;
-  cardMode: "new" | "existing" | "none";
-  walletMode: "new" | "existing" | "none";
-  existingCardId?: string;
-  existingWalletId?: string;
+  cardId?: string;
+  walletId?: string;
 };
 
 export type CreateAgentInput = {

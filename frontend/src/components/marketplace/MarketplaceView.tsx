@@ -1,11 +1,18 @@
 "use client";
 
-import type { Product } from "@/lib/types";
+import type { Product, UseCase } from "@/lib/types";
 import { MARKETPLACE_USE_CASES, groupProductsByUseCase } from "@/lib/marketplace";
 import { money } from "@/lib/format";
+import { Cpu, Plane, ShoppingCart, type LucideIcon } from "lucide-react";
 
 type Props = {
   products: Product[];
+};
+
+const USE_CASE_ICONS: Record<UseCase, LucideIcon> = {
+  electronics: Cpu,
+  groceries: ShoppingCart,
+  travel: Plane
 };
 
 export function MarketplaceView({ products }: Props) {
@@ -24,11 +31,16 @@ export function MarketplaceView({ products }: Props) {
 
       {MARKETPLACE_USE_CASES.map((useCase) => {
         const services = grouped[useCase.id];
+        const UseCaseIcon = USE_CASE_ICONS[useCase.id];
+
         return (
           <section key={useCase.id} className="surface-card marketplace-use-case">
             <div className="marketplace-use-case-head">
               <div>
-                <span className="section-label">{useCase.label}</span>
+                <span className="section-label marketplace-use-case-label">
+                  <UseCaseIcon className="marketplace-use-case-icon" strokeWidth={1.75} aria-hidden />
+                  {useCase.label}
+                </span>
                 <h3>{useCase.objective}</h3>
                 <p>{useCase.description}</p>
               </div>
@@ -46,7 +58,7 @@ export function MarketplaceView({ products }: Props) {
                 services.map((service) => (
                   <article key={service.id} className="marketplace-service-card">
                     <div className="marketplace-service-icon" aria-hidden>
-                      {useCase.id === "electronics" ? "⚡" : useCase.id === "groceries" ? "🛒" : "✈️"}
+                      <UseCaseIcon className="marketplace-service-icon-svg" strokeWidth={1.75} />
                     </div>
                     <div className="marketplace-service-copy">
                       <strong>{service.name}</strong>

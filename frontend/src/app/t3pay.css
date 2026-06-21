@@ -152,6 +152,13 @@ button {
   height: auto;
 }
 
+.brand-logo-image.card {
+  width: auto;
+  height: 28px;
+  max-width: 120px;
+  margin: 0 auto;
+}
+
 .login-question {
   margin: 0;
   font-size: 1.375rem;
@@ -691,7 +698,7 @@ textarea:focus {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 200;
   display: grid;
   place-items: center;
   padding: 20px;
@@ -1426,164 +1433,314 @@ textarea:focus {
 
 /* Vault pages */
 .vault-page-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.vault-illustration-grid,
-.dashboard-vault-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.vault-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
-.vault-illustration-card,
-.dashboard-vault-card {
+.vault-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.vault-grid-card {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
   border: 1px solid var(--vp-line);
   border-radius: 16px;
   background: var(--vp-card);
-  overflow: hidden;
+  text-align: center;
+  color: inherit;
 }
 
-.vault-illustration-card {
-  display: grid;
+button.vault-grid-card {
+  width: 100%;
+  font: inherit;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.dashboard-vault-card {
-  display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  gap: 0;
+.vault-grid-card--interactive:hover,
+.vault-grid-card--interactive:focus-visible {
+  border-color: color-mix(in oklch, var(--vp-blue) 45%, var(--vp-line));
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 22%);
+  outline: none;
 }
 
-.dashboard-vault-art {
-  background:
-    radial-gradient(circle at 30% 20%, oklch(0.58 0.16 255 / 0.35), transparent 55%),
-    linear-gradient(180deg, oklch(0.28 0.07 255), oklch(0.2 0.05 255));
-  min-height: 120px;
-}
-
-.vault-illustration-art {
-  height: 120px;
-  background:
-    radial-gradient(circle at 70% 20%, oklch(0.58 0.16 255 / 0.4), transparent 50%),
-    linear-gradient(180deg, oklch(0.3 0.08 255), oklch(0.18 0.05 255));
-  position: relative;
-}
-
-.vault-illustration-lock {
-  position: absolute;
-  top: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 2px solid oklch(0.78 0.1 255);
-}
-
-.vault-illustration-door {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 56px;
-  border: 2px solid color-mix(in oklch, var(--vp-blue) 50%, white);
-  border-bottom: none;
-  border-radius: 12px 12px 0 0;
-  background: color-mix(in oklch, var(--vp-blue) 18%, transparent);
-}
-
-.vault-illustration-body,
-.dashboard-vault-copy {
-  display: grid;
-  gap: 10px;
-  padding: 16px;
-}
-
-.vault-illustration-head {
-  display: grid;
-  gap: 4px;
-}
-
-.vault-illustration-head span,
-.dashboard-vault-copy span {
-  color: var(--vp-muted);
-  font-size: 0.8125rem;
-}
-
-.vault-illustration-meta {
+.vault-grid-card-brand {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--vp-muted);
-  font-size: 0.875rem;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--vp-surface);
+  border: 1px solid var(--vp-line);
 }
 
-.vault-create-card {
-  display: grid;
-  place-items: center;
-  gap: 8px;
-  min-height: 240px;
-  padding: 24px;
+.vault-grid-card-title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.vault-grid-card--create {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 220px;
   border-style: dashed;
   background: transparent;
-  color: inherit;
   cursor: pointer;
-}
-
-.vault-create-card span {
-  color: var(--vp-muted);
-  font-size: 0.875rem;
   text-align: center;
 }
 
-.vault-create-plus {
-  width: 48px;
-  height: 48px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--vp-line);
-  font-size: 1.75rem;
+.vault-grid-card--create strong {
+  font-size: 1rem;
+  width: 100%;
+}
+
+.vault-grid-card--create span {
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+  max-width: 22ch;
+  margin: 0 auto;
+  display: block;
+}
+
+.vault-create-icon {
+  width: 28px;
+  height: 28px;
   color: var(--vp-blue-ink);
+  flex-shrink: 0;
 }
 
-.vault-funding-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.vault-funding-grid {
+  display: grid;
+  gap: 10px;
+  width: 100%;
 }
 
-.vault-funding-badges.compact .vault-funding-badge {
-  font-size: 0.75rem;
-  padding: 4px 8px;
+.vault-funding-grid--duo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.vault-funding-badge {
-  display: inline-flex;
-  align-items: center;
+.vault-funding-grid--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vault-funding-grid--empty {
+  place-items: center;
+  min-height: 88px;
+  border: 1px dashed var(--vp-line);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.vault-funding-tile {
+  display: grid;
   gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
+  justify-items: center;
+  padding: 12px 10px;
   border: 1px solid var(--vp-line);
+  border-radius: 12px;
   background: var(--vp-surface);
-  font-size: 0.8125rem;
+  min-height: 108px;
 }
 
-.vault-funding-badge.card {
-  border-color: color-mix(in oklch, var(--vp-blue) 35%, var(--vp-line));
+.vault-funding-tile[data-kind="card"] {
+  border-color: color-mix(in oklch, var(--vp-blue) 30%, var(--vp-line));
 }
 
-.vault-funding-badge.wallet {
-  border-color: color-mix(in oklch, var(--vp-success) 35%, var(--vp-line));
+.vault-funding-tile[data-kind="wallet"] {
+  border-color: color-mix(in oklch, var(--vp-success) 28%, var(--vp-line));
+}
+
+.vault-funding-tile-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--vp-muted);
+}
+
+.vault-funding-tile-label {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--vp-fg);
+  word-break: break-word;
+}
+
+.vault-funding-tile-balance {
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .vault-funding-empty {
+  margin: 0;
   color: var(--vp-muted);
   font-size: 0.8125rem;
+  text-align: center;
+}
+
+.vault-detail-modal {
+  width: min(760px, 96vw);
+  max-width: none;
+}
+
+.vault-detail-header {
+  margin-bottom: 18px;
+}
+
+.vault-detail-layout {
+  display: grid;
+  gap: 16px;
+}
+
+.vault-detail-layout--duo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vault-detail-layout--solo {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.vault-detail-layout--empty {
+  place-items: center;
+  min-height: 120px;
+}
+
+.vault-detail-panel {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 14px;
+  border: 1px solid var(--vp-line);
+  border-radius: 14px;
+  background: var(--vp-surface);
+}
+
+.vault-detail-panel-copy {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.vault-detail-panel-copy span {
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+}
+
+.vault-detail-empty {
+  padding: 24px;
+}
+
+.vault-create-modal .vault-detail-layout--duo {
+  margin-top: 4px;
+}
+
+.vault-create-name-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--vp-muted);
+}
+
+.vault-create-name-field input {
+  width: 100%;
+}
+
+.vault-create-funding-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--vp-line);
+  border-radius: 14px;
+  background: var(--vp-surface);
+}
+
+.vault-create-funding-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--vp-fg);
+}
+
+.vault-create-funding-head-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--vp-muted);
+}
+
+.vault-create-funding-placeholder {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  min-height: 168px;
+  padding: 20px 12px;
+  border: 1px dashed var(--vp-line);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--vp-muted);
+}
+
+.vault-create-funding-placeholder-icon {
+  width: 28px;
+  height: 28px;
+  opacity: 0.55;
+}
+
+.vault-create-funding-placeholder p {
+  margin: 0;
+  font-size: 0.8125rem;
+  max-width: 24ch;
+}
+
+.vault-create-actions {
+  margin-top: 18px;
+}
+
+.credit-card-visual--mini {
+  width: 100%;
+  max-width: 300px;
+  min-height: 168px;
+  padding: 18px;
+  transform: none;
+}
+
+.credit-card-visual--mini .credit-card-number {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.credit-card-visual--mini .credit-card-meta {
+  grid-template-columns: 1fr;
+}
+
+.wallet-visual--mini {
+  width: 100%;
+  max-width: 300px;
+  min-height: 168px;
+  padding: 18px;
+  gap: 10px;
+}
+
+.wallet-visual--mini .wallet-address {
+  font-size: 0.6875rem;
 }
 
 /* Marketplace */
@@ -1615,6 +1772,33 @@ textarea:focus {
   border: 1px solid var(--vp-line);
   background: var(--vp-surface);
   font-size: 0.8125rem;
+}
+
+.marketplace-use-case-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.marketplace-use-case-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.marketplace-service-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  color: var(--vp-blue-ink);
+}
+
+.marketplace-service-icon-svg {
+  width: 20px;
+  height: 20px;
 }
 
 .marketplace-service-grid {
@@ -1657,5 +1841,9 @@ textarea:focus {
   .marketplace-use-case-head {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .vault-detail-layout--duo {
+    grid-template-columns: 1fr;
   }
 }

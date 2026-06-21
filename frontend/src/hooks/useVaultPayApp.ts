@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
-import { saveCardPreview, saveVaultLabel, saveWalletPreview } from "@/lib/asset-previews";
+import { getAssetPreview, saveCardPreview, saveVaultLabel, saveWalletPreview } from "@/lib/asset-previews";
 import { createMockCard, createMockWallet } from "@/lib/mock-assets";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
@@ -31,7 +31,10 @@ const USE_CASES = MARKETPLACE_USE_CASES.map(({ id, label, objective }) => ({ id,
 const VIEW_META: Record<AppView, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Your vaults, agents, and spending control." },
   agent: { title: "Agent workspace", subtitle: "Run purchases and review audit activity." },
-  vault: { title: "Vaults", subtitle: "Funding compartments, sealed credentials, and agent bindings." },
+  vault: {
+    title: "My Vaults",
+    subtitle: "Each vault seals the cards and wallets your agents can spend from under mandate policy."
+  },
   marketplace: { title: "Marketplace", subtitle: "Use cases and merchant services available to your agents." },
   agents: { title: "Agents", subtitle: "T3N DIDs, scoped ADK grants, and revocation." },
   runs: { title: "Runs", subtitle: "Groq selection rationale and sanitized agent memory." },
@@ -307,57 +310,40 @@ export function useVaultPayApp() {
       const vaultId = String(vault.vault.id);
       saveVaultLabel(vaultId, input.label.trim() || "Vault");
 
-      async function attachCard() {
-        if (input.cardMode === "none") return;
-        if (input.cardMode === "existing" && input.existingCardId) {
-          const existing = paymentMethods.find((method) => method.id === input.existingCardId);
-          if (!existing) return;
+      if (input.cardId) {
+        const existing = paymentMethods.find((method) => String(method.id) === input.cardId);
+        if (existing) {
           const created = await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/payment-methods`, {
             type: "card",
             alias: String(existing.alias),
             balanceCents: Number(existing.balance_cents ?? 0),
             currency: "USD"
           });
-          const preview = createMockCard(activeSession.displayName);
-          saveCardPreview(String(created.paymentMethod.id), preview);
-          return;
+          const preview = getAssetPreview(String(existing.id));
+          saveCardPreview(
+            String(created.paymentMethod.id),
+            preview?.type === "card" ? preview.card : createMockCard(activeSession.displayName)
+          );
         }
-        const preview = createMockCard(activeSession.displayName);
-        const created = await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/payment-methods`, {
-          type: "card",
-          alias: preview.network,
-          balanceCents: 100000,
-          currency: "USD"
-        });
-        saveCardPreview(String(created.paymentMethod.id), preview);
       }
 
-      async function attachWallet() {
-        if (input.walletMode === "none") return;
-        if (input.walletMode === "existing" && input.existingWalletId) {
-          const existing = paymentMethods.find((method) => method.id === input.existingWalletId);
-          if (!existing) return;
+      if (input.walletId) {
+        const existing = paymentMethods.find((method) => String(method.id) === input.walletId);
+        if (existing) {
           const created = await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/payment-methods`, {
             type: "stablecoin",
             alias: String(existing.alias),
             balanceCents: Number(existing.balance_cents ?? 0),
             currency: "USDC"
           });
-          const preview = createMockWallet();
-          saveWalletPreview(String(created.paymentMethod.id), preview);
-          return;
+          const preview = getAssetPreview(String(existing.id));
+          saveWalletPreview(
+            String(created.paymentMethod.id),
+            preview?.type === "stablecoin" ? preview.wallet : createMockWallet()
+          );
         }
-        const preview = createMockWallet();
-        const created = await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/payment-methods`, {
-          type: "stablecoin",
-          alias: `${preview.symbol} Wallet`,
-          balanceCents: 100000,
-          currency: "USDC"
-        });
-        saveWalletPreview(String(created.paymentMethod.id), preview);
       }
 
-      await Promise.all([attachCard(), attachWallet()]);
       toast.success("Vault created.", toastId);
       setShowCreateVault(false);
       await refresh();
