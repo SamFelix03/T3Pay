@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api";
 import { saveCardPreview, saveVaultLabel, saveWalletPreview } from "@/lib/asset-previews";
 import { createMockCard, createMockWallet } from "@/lib/mock-assets";
-import { clearSession, loadSession, saveSession } from "@/lib/session";
+import { supabase } from "@/lib/supabase";
 import { toast } from "@/lib/toast";
 import type {
   AgentPaymentMethod,
@@ -51,7 +51,6 @@ export function useVaultPayApp() {
   const [showCreateVault, setShowCreateVault] = useState(false);
   const [showCreateAgent, setShowCreateAgent] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [displayName, setDisplayName] = useState("");
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice>("card");
   const [runUseCase, setRunUseCase] = useState<UseCase>("electronics");
   const [objective, setObjective] = useState(USE_CASES[0].objective);
@@ -60,6 +59,7 @@ export function useVaultPayApp() {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [showDemoWelcome, setShowDemoWelcome] = useState(false);
   const [demoKitBalances, setDemoKitBalances] = useState({ card: 100_000, wallet: 100_000 });
+  const syncingRef = useRef(false);
 
   const vaults = dashboard?.vaults ?? [];
   const agents = dashboard?.agents ?? [];
@@ -103,13 +103,87 @@ export function useVaultPayApp() {
   }, [session?.userId]);
 
   useEffect(() => {
-    const stored = loadSession();
-    if (stored) {
-      setSession(stored);
-      setDisplayName(stored.displayName);
-    }
-    setSessionReady(true);
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session: authSession } }) => {
+      if (!active) return;
+      if (authSession) {
+        bootstrapFromAuth(authSession.user.id).catch((error) => toast.error((error as Error).message));
+      } else {
+        setSessionReady(true);
+      }
+    });
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, authSession) => {
+      if (authSession) {
+        bootstrapFromAuth(authSession.user.id).catch((error) => toast.error((error as Error).message));
+      } else {
+        setSession(null);
+        setDashboard(null);
+        setSelectedAgentId(null);
+        setRunTrace(null);
+        setShowDemoWelcome(false);
+        setSessionReady(true);
+      }
+    });
+    return () => {
+      active = false;
+      subscription.subscription.unsubscribe();
+    };
   }, []);
+
+  async function bootstrapFromAuth(userId: string) {
+    if (syncingRef.current) return;
+    syncingRef.current = true;
+    setBusy(true);
+    try {
+      const result = await apiPost<{ user: AnyRow; demoKit: DemoKit }>("/api/users/sync", {});
+      const nextSession: UserSession = {
+        userId: String(result.user.id ?? userId),
+        userDid: String(result.user.did ?? ""),
+        displayName: String(result.user.displayName ?? "User"),
+        email: String(result.user.email ?? "")
+      };
+      setSession(nextSession);
+      if (result.demoKit?.provisioned) {
+        applyDemoKit(result.demoKit, nextSession.displayName);
+        setShowDemoWelcome(true);
+      }
+      await refresh(nextSession.userId);
+      setView("dashboard");
+    } finally {
+      setBusy(false);
+      setSessionReady(true);
+      syncingRef.current = false;
+    }
+  }
+
+  async function signIn(email: string, password: string) {
+    setBusy(true);
+    const toastId = toast.loading("Signing in…");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Signed in.", toastId);
+    } catch (error) {
+      toast.error((error as Error).message, toastId);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signUp(email: string, password: string, name: string) {
+    setBusy(true);
+    const toastId = toast.loading("Creating account…");
+    try {
+      await apiPost("/api/users/register", { email: email.trim(), password, displayName: name.trim() });
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) throw error;
+      toast.success("Account created.", toastId);
+    } catch (error) {
+      toast.error((error as Error).message, toastId);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!sessionReady) return;
@@ -127,7 +201,7 @@ export function useVaultPayApp() {
 
   function applyDemoKit(kit: DemoKit, name: string) {
     if (!kit.provisioned || !kit.vaultId) return;
-    saveVaultLabel(kit.vaultId, "Demo vault");
+    saveVaultLabel(kit.vaultId, "T3Pay Vault");
     if (kit.card?.id) {
       saveCardPreview(kit.card.id, createMockCard(name));
       setSelectedPaymentMethodId(kit.card.id);
@@ -149,41 +223,22 @@ export function useVaultPayApp() {
     }
   }
 
-  async function login(name: string) {
-    const trimmed = name.trim();
-    if (!trimmed) return;
+
+  async function logout() {
     setBusy(true);
-    const toastId = toast.loading("Signing in…");
     try {
-      const result = await apiPost<{ user: AnyRow; demoKit: DemoKit }>("/api/users/session", { displayName: trimmed });
-      const nextSession: UserSession = {
-        userId: String(result.user.id),
-        userDid: String(result.user.did ?? ""),
-        displayName: trimmed
-      };
-      saveSession(nextSession);
-      setSession(nextSession);
-      setDisplayName(trimmed);
-      if (result.demoKit?.provisioned) {
-        applyDemoKit(result.demoKit, trimmed);
-        setShowDemoWelcome(true);
-      }
-      toast.success(`Welcome, ${trimmed}.`, toastId);
-      await refresh(nextSession.userId);
+      await supabase.auth.signOut();
+      setSession(null);
+      setDashboard(null);
+      setSelectedAgentId(null);
+      setRunTrace(null);
+      setShowDemoWelcome(false);
       setView("dashboard");
     } catch (error) {
-      toast.error((error as Error).message, toastId);
+      toast.error((error as Error).message);
     } finally {
       setBusy(false);
     }
-  }
-
-  function logout() {
-    clearSession();
-    setSession(null);
-    setDashboard(null);
-    setSelectedAgentId(null);
-    setView("dashboard");
   }
 
   async function ensureFundingVault(): Promise<string> {
@@ -497,8 +552,6 @@ export function useVaultPayApp() {
     showCreateAgent,
     setShowCreateAgent,
     busy,
-    displayName,
-    setDisplayName,
     paymentChoice,
     setPaymentChoice,
     runUseCase,
@@ -516,7 +569,8 @@ export function useVaultPayApp() {
     candidates,
     useCases: USE_CASES,
     viewMeta: VIEW_META,
-    login,
+    signIn,
+    signUp,
     logout,
     addCard,
     addWallet,

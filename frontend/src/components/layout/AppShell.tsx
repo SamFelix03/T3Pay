@@ -56,12 +56,7 @@ export function AppShell() {
 
   if (!app.session) {
     return (
-      <LoginGate
-        displayName={app.displayName}
-        setDisplayName={app.setDisplayName}
-        login={app.login}
-        busy={app.busy}
-      />
+      <LoginGate signIn={app.signIn} signUp={app.signUp} busy={app.busy} />
     );
   }
 
@@ -74,7 +69,7 @@ export function AppShell() {
         view={app.view}
         onViewChange={app.setView}
         onAssetRequest={handleAssetRequest}
-        onRefresh={app.refresh}
+        onLogout={app.logout}
         busy={app.busy}
         pendingApprovals={app.dashboard?.totals.pendingApprovals ?? 0}
         cardCount={app.cards.length}

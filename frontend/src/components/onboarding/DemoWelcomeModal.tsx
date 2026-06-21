@@ -31,8 +31,8 @@ export function DemoWelcomeModal({
         </button>
         <h2 className="modal-title">Your demo wallet is ready</h2>
         <p className="modal-lead">
-          Welcome, {displayName}. We created a starter vault with a mock card and USDC wallet so you can explore
-          VaultPay immediately — no setup required.
+          Welcome, {displayName}. We created <strong>T3Pay Vault</strong> with a mock card and USDC wallet so you can
+          explore VaultPay immediately — no setup required.
         </p>
 
         <div className="demo-welcome-grid">

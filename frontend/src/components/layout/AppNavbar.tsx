@@ -96,7 +96,7 @@ type Props = {
   view: AppView;
   onViewChange: (view: AppView) => void;
   onAssetRequest: (asset: "card" | "wallet") => void;
-  onRefresh: () => void;
+  onLogout: () => void;
   busy: boolean;
   pendingApprovals: number;
   cardCount: number;
@@ -107,7 +107,7 @@ export function AppNavbar({
   view,
   onViewChange,
   onAssetRequest,
-  onRefresh,
+  onLogout,
   busy,
   pendingApprovals,
   cardCount,
@@ -168,8 +168,8 @@ export function AppNavbar({
             </button>
           </div>
 
-          <button type="button" className="ghost-btn" onClick={onRefresh} disabled={busy}>
-            Refresh
+          <button type="button" className="ghost-btn" onClick={onLogout} disabled={busy}>
+            Log out
           </button>
         </div>
       </div>

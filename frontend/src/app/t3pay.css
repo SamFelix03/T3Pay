@@ -118,6 +118,23 @@ button {
   gap: 14px;
 }
 
+.login-step label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.login-step input {
+  width: 100%;
+}
+
+.login-switch-btn {
+  margin-top: 4px;
+  justify-self: center;
+}
+
 .brand-logo-image {
   display: block;
   object-fit: contain;

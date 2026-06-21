@@ -1,9 +1,13 @@
 create table if not exists users (
   id text primary key,
+  auth_user_id uuid unique,
+  email text,
   did text not null,
   display_name text not null,
   created_at timestamptz not null
 );
+
+create unique index if not exists users_email_idx on users(email) where email is not null;
 
 create table if not exists vaults (
   id text primary key,

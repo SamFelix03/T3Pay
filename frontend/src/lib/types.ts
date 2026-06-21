@@ -11,6 +11,7 @@ export type UserSession = {
   userId: string;
   userDid: string;
   displayName: string;
+  email: string;
 };
 
 export type Dashboard = {
