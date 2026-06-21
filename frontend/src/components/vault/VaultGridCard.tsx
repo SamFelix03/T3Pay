@@ -10,14 +10,18 @@ type Props = VaultFunding & {
   vaultId: string;
   label: string;
   onClick?: () => void;
+  selected?: boolean;
+  compact?: boolean;
 };
 
-export function VaultGridCard({ vaultId, label, card, wallet, onClick }: Props) {
+export function VaultGridCard({ vaultId, label, card, wallet, onClick, selected = false, compact = false }: Props) {
   const interactive = Boolean(onClick);
   const slots = fundingSlots({ card, wallet });
   const className = [
     "vault-grid-card",
+    compact ? "vault-grid-card--compact" : "",
     interactive ? "vault-grid-card--interactive" : "",
+    selected ? "vault-grid-card--selected" : "",
     slots.length === 0 ? "vault-grid-card--empty-funding" : ""
   ]
     .filter(Boolean)
@@ -35,7 +39,13 @@ export function VaultGridCard({ vaultId, label, card, wallet, onClick }: Props) 
 
   if (interactive) {
     return (
-      <button type="button" className={className} onClick={onClick} aria-label={`Open ${label} details`}>
+      <button
+        type="button"
+        className={className}
+        onClick={onClick}
+        aria-label={`Select ${label}`}
+        aria-pressed={selected}
+      >
         {body}
       </button>
     );

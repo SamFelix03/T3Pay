@@ -99,12 +99,14 @@ function AppShellInner() {
       />
 
       <main className="app-main">
-        <header className="page-header animate-fade-in-up">
-          <h1 className="page-title">{meta.title}</h1>
-          <p className="page-subtitle">{meta.subtitle}</p>
-        </header>
+        {app.view !== "agent" ? (
+          <header className="page-header animate-fade-in-up">
+            <h1 className="page-title">{meta.title}</h1>
+            <p className="page-subtitle">{meta.subtitle}</p>
+          </header>
+        ) : null}
 
-        <div className="page-content animate-fade-in-up stagger-2">
+        <div className={`page-content animate-fade-in-up ${app.view === "agent" ? "" : "stagger-2"}`}>
           {app.view === "dashboard" && (
             <DashboardView
               dashboard={app.dashboard}
@@ -131,11 +133,9 @@ function AppShellInner() {
               candidates={app.candidates}
               paymentChoice={app.paymentChoice}
               setPaymentChoice={app.setPaymentChoice}
-              runUseCase={app.runUseCase}
-              onUseCaseChange={app.onUseCaseChange}
+              agentAllowedPaymentMethods={app.agentAllowedPaymentMethods}
               objective={app.objective}
               setObjective={app.setObjective}
-              useCases={app.useCases}
               runSelectedAgent={app.runSelectedAgent}
               busy={app.busy}
               setView={(view) => {
@@ -145,6 +145,7 @@ function AppShellInner() {
               runTrace={app.runTrace}
               selectedRunId={app.selectedRunId}
               loadRunTrace={app.loadRunTrace}
+              paymentMethods={app.paymentMethods}
             />
           )}
           {app.view === "vault" && (

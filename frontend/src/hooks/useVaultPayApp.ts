@@ -25,6 +25,7 @@ import type {
 
 import { MARKETPLACE_USE_CASES } from "@/lib/marketplace";
 import { buildAppUrl } from "@/lib/app-navigation";
+import { effectivePaymentMethodKinds, useCaseForRole } from "@/lib/agent-utils";
 
 const USE_CASES = MARKETPLACE_USE_CASES.map(({ id, label, objective }) => ({ id, label, objective }));
 
@@ -78,6 +79,9 @@ export function useVaultPayApp() {
     : [];
   const agentCard = vaultPaymentMethods.find((method) => method.type === "card") ?? cards[0] ?? null;
   const agentWallet = vaultPaymentMethods.find((method) => method.type === "stablecoin") ?? wallets[0] ?? null;
+  const agentAllowedPaymentMethods = selectedAgent
+    ? effectivePaymentMethodKinds(selectedAgent, vaultPaymentMethods)
+    : [];
   const selectedPaymentMethod = paymentMethods.find((method) => method.id === selectedPaymentMethodId)
     ?? (paymentChoice === "stablecoin" ? agentWallet : agentCard);
 
@@ -94,6 +98,24 @@ export function useVaultPayApp() {
     () => products.filter((product) => product.category === runUseCase).slice(0, 3),
     [products, runUseCase]
   );
+
+  const vaultMethodKey = useMemo(
+    () => vaultPaymentMethods.map((method) => `${method.id}:${method.type}:${method.status}`).join("|"),
+    [agentVaultId, paymentMethods]
+  );
+
+  useEffect(() => {
+    if (!selectedAgent) return;
+    const useCase = useCaseForRole(String(selectedAgent.role ?? "shopping_agent"));
+    setRunUseCase(useCase);
+    setObjective(USE_CASES.find((item) => item.id === useCase)?.objective ?? USE_CASES[0].objective);
+
+    const allowed = effectivePaymentMethodKinds(selectedAgent, vaultPaymentMethods);
+    const nextChoice = allowed[0] ?? "card";
+    setPaymentChoice(nextChoice);
+    const method = nextChoice === "stablecoin" ? agentWallet : agentCard;
+    if (method?.id) setSelectedPaymentMethodId(String(method.id));
+  }, [selectedAgent?.id, selectedAgent?.role, selectedAgent?.payment_method, agentVaultId, vaultMethodKey, agentCard?.id, agentWallet?.id]);
 
   const refresh = useCallback(async (userId = session?.userId) => {
     const dashboardPath = userId ? `/api/dashboard?userId=${encodeURIComponent(userId)}` : "/api/dashboard";
@@ -545,8 +567,14 @@ export function useVaultPayApp() {
     showCreateAgent,
     setShowCreateAgent,
     busy,
+    agentAllowedPaymentMethods,
     paymentChoice,
-    setPaymentChoice,
+    setPaymentChoice: (next: PaymentChoice) => {
+      if (!agentAllowedPaymentMethods.includes(next)) return;
+      setPaymentChoice(next);
+      const method = next === "stablecoin" ? agentWallet : agentCard;
+      if (method?.id) setSelectedPaymentMethodId(String(method.id));
+    },
     runUseCase,
     setRunUseCase,
     objective,
@@ -561,7 +589,6 @@ export function useVaultPayApp() {
     latestApproval,
     candidates,
     products,
-    useCases: USE_CASES,
     viewMeta: VIEW_META,
     signIn,
     signUp,
@@ -576,11 +603,7 @@ export function useVaultPayApp() {
     rejectLatest,
     revokeAgent,
     verifyReceipt,
-    refresh: () => refresh().catch((error) => toast.error((error as Error).message)),
-    onUseCaseChange: (next: UseCase) => {
-      setRunUseCase(next);
-      setObjective(USE_CASES.find((item) => item.id === next)?.objective ?? objective);
-    }
+    refresh: () => refresh().catch((error) => toast.error((error as Error).message))
   };
 }
 

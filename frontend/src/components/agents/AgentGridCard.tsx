@@ -4,7 +4,7 @@ import type { AnyRow } from "@/lib/types";
 import { grantStatusLabel, mandateForAgent, paymentMethodKinds } from "@/lib/agent-utils";
 import { money, short } from "@/lib/format";
 import { StatusChip } from "@/components/ui/primitives";
-import { Bot, CreditCard, Wallet } from "lucide-react";
+import { CreditCard, Wallet } from "lucide-react";
 
 type Props = {
   agent: AnyRow;
@@ -22,18 +22,33 @@ export function AgentGridCard({ agent, mandates, onRun, onRevoke, busy }: Props)
   const methods = paymentMethodKinds(agent);
   const canRevoke = String(agent.status) !== "revoked";
 
+  function handleCardClick() {
+    if (busy) return;
+    onRun(agentId);
+  }
+
+  function handleCardKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (busy) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onRun(agentId);
+    }
+  }
+
   return (
-    <article className="agent-grid-card">
-      <div className="agent-grid-card-brand" aria-hidden>
-        <Bot className="agent-grid-card-brand-icon" strokeWidth={1.75} />
+    <article
+      className="agent-grid-card agent-grid-card--clickable"
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role="button"
+      tabIndex={busy ? -1 : 0}
+      aria-label={`Open ${String(agent.name)} workspace`}
+    >
+      <div className="agent-grid-card-brand">
+        <strong className="agent-grid-card-name">{String(agent.name)}</strong>
       </div>
 
       <code className="agent-grid-card-did">{short(agent.t3n_did)}</code>
-
-      <div className="agent-grid-card-budget">
-        <span>Budget left</span>
-        <strong>{money(budgetCents)}</strong>
-      </div>
 
       <div className="agent-grid-card-badges">
         {methods.map((kind) => (
@@ -48,17 +63,38 @@ export function AgentGridCard({ agent, mandates, onRun, onRevoke, busy }: Props)
         <StatusChip value={grantStatus} />
       </div>
 
+      <div className="agent-grid-card-budget">
+        <span>Budget left</span>
+        <strong>{money(budgetCents)}</strong>
+      </div>
+
       <footer className="agent-grid-card-actions">
-        <button type="button" className="primary-btn agent-run-btn" onClick={() => onRun(agentId)} disabled={busy}>
-          Run
-        </button>
         {canRevoke ? (
-          <button type="button" className="ghost-btn danger agent-revoke-btn" onClick={() => onRevoke(agentId)} disabled={busy}>
+          <button
+            type="button"
+            className="ghost-btn danger agent-revoke-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              onRevoke(agentId);
+            }}
+            disabled={busy}
+          >
             Revoke
           </button>
         ) : (
           <span className="agent-grid-card-spacer" />
         )}
+        <button
+          type="button"
+          className="primary-btn agent-run-btn"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRun(agentId);
+          }}
+          disabled={busy}
+        >
+          Run
+        </button>
       </footer>
     </article>
   );

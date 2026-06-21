@@ -2,10 +2,18 @@
 
 import type { VaultPayApp } from "@/hooks/useVaultPayApp";
 import { getVaultLabel } from "@/lib/asset-previews";
-import { money, short, timeAgo } from "@/lib/format";
-import { FieldRow, StatusChip } from "@/components/ui/primitives";
+import {
+  agentRoleLabel,
+  effectivePaymentMethodKinds,
+  grantStatusLabel,
+  paymentMethodLabel
+} from "@/lib/agent-utils";
+import { money, timeAgo } from "@/lib/format";
+import { StatusChip } from "@/components/ui/primitives";
 import { SelectMenu } from "@/components/ui/SelectMenu";
 import { RunTracePanel } from "@/components/agents/RunTracePanel";
+import { CreditCard, Wallet } from "lucide-react";
+import type { AppView } from "@/lib/types";
 
 type Props = Pick<
   VaultPayApp,
@@ -16,17 +24,16 @@ type Props = Pick<
   | "candidates"
   | "paymentChoice"
   | "setPaymentChoice"
-  | "runUseCase"
-  | "onUseCaseChange"
+  | "agentAllowedPaymentMethods"
   | "objective"
   | "setObjective"
-  | "useCases"
   | "runSelectedAgent"
   | "busy"
   | "setView"
   | "runTrace"
   | "selectedRunId"
   | "loadRunTrace"
+  | "paymentMethods"
 >;
 
 export function AgentWorkspaceView({
@@ -37,105 +44,144 @@ export function AgentWorkspaceView({
   candidates,
   paymentChoice,
   setPaymentChoice,
-  runUseCase,
-  onUseCaseChange,
+  agentAllowedPaymentMethods,
   objective,
   setObjective,
-  useCases,
   runSelectedAgent,
   busy,
   setView,
   runTrace,
   selectedRunId,
-  loadRunTrace
+  loadRunTrace,
+  paymentMethods
 }: Props) {
+  function navigate(view: AppView) {
+    setView(view);
+  }
+
   if (!selectedAgent) {
     return (
       <section className="surface-card">
-        <p className="empty-state">Select an agent from the dashboard.</p>
-        <button type="button" className="ghost-btn" onClick={() => setView("dashboard")}>
-          Back to dashboard
+        <p className="empty-state">Select an agent from the agents page.</p>
+        <button type="button" className="ghost-btn" onClick={() => navigate("agents")}>
+          Go to agents
         </button>
       </section>
     );
   }
 
   const vaultId = selectedAgent.vault_id ? String(selectedAgent.vault_id) : null;
+  const vaultLabel = vaultId ? getVaultLabel(vaultId) : "Not assigned";
+  const grantStatus = grantStatusLabel(selectedAgent);
+  const roleLabel = agentRoleLabel(String(selectedAgent.role ?? "custom_agent"));
+  const budgetCents = Number(agentMandate?.budget_remaining_cents ?? 0);
+  const paymentKinds = effectivePaymentMethodKinds(
+    selectedAgent,
+    paymentMethods.filter((method) => String(method.vault_id) === vaultId)
+  );
+  const showPaymentPicker = agentAllowedPaymentMethods.length > 1;
 
   return (
-    <div className="view-stack">
-      <section className="surface-card">
-        <div className="card-head">
-          <div>
-            <button type="button" className="text-btn back-btn" onClick={() => setView("dashboard")}>
-              ← Dashboard
-            </button>
-            <h2>{String(selectedAgent.name)}</h2>
-            <p>{short(selectedAgent.t3n_did)}</p>
+    <div className="view-stack agent-workspace">
+      <nav className="breadcrumb" aria-label="Breadcrumb">
+        <button type="button" className="breadcrumb-link" onClick={() => navigate("agents")}>
+          Agents
+        </button>
+        <span className="breadcrumb-sep" aria-hidden>
+          /
+        </span>
+        <span className="breadcrumb-current">{String(selectedAgent.name)}</span>
+      </nav>
+
+      <section className="agent-workspace-hero surface-card">
+        <div className="agent-workspace-hero-main">
+          <div className="agent-workspace-title-row">
+            <h1 className="agent-workspace-title">{String(selectedAgent.name)}</h1>
           </div>
-          <StatusChip value={String(selectedAgent.status)} />
+
+          <div className="agent-workspace-payment-block">
+            <span className="agent-workspace-payment-label">Available payment methods:</span>
+            <div className="agent-workspace-badges">
+              {paymentKinds.map((kind) => (
+                <span key={kind} className={`agent-workspace-badge agent-workspace-badge--${kind}`}>
+                  {kind === "card" ? (
+                    <CreditCard className="agent-workspace-badge-icon" strokeWidth={1.75} aria-hidden />
+                  ) : (
+                    <Wallet className="agent-workspace-badge-icon" strokeWidth={1.75} aria-hidden />
+                  )}
+                  {paymentMethodLabel(kind)}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="insight-grid three">
-          <FieldRow label="Vault" value={vaultId ? getVaultLabel(vaultId) : "Not assigned"} />
-          <FieldRow label="Budget left" value={money(Number(agentMandate?.budget_remaining_cents ?? 0))} />
-          <FieldRow label="Grant" value={((selectedAgent.latestGrant as Record<string, unknown> | undefined)?.status as string) ?? "missing"} />
+
+        <div className="agent-workspace-budget-badge">
+          <span>Budget left</span>
+          <strong>{money(budgetCents)}</strong>
         </div>
       </section>
 
       <section className="surface-card agent-run-card">
-        <div className="card-head">
-          <div>
-            <span className="section-label">Run workflow</span>
-            <h2>Agent instruction</h2>
+        <div className="agent-run-head">
+          <span className="section-label">Run workflow</span>
+          <h2 className="agent-run-title">Run Workflow</h2>
+          <div className="agent-run-meta">
+            <span className="agent-run-meta-item">
+              <em>Role</em>
+              {roleLabel}
+            </span>
+            <span className="agent-run-meta-item">
+              <em>Vault</em>
+              {vaultLabel}
+            </span>
+            <span className="agent-run-meta-item">
+              <em>Status</em>
+              <StatusChip value={grantStatus} />
+            </span>
           </div>
         </div>
 
-        <div className="composer-grid">
-          <label>
-            Category
-            <SelectMenu
-              value={runUseCase}
-              options={useCases.map((item) => ({ value: item.id, label: item.label }))}
-              onChange={(value) => onUseCaseChange(value as typeof runUseCase)}
-            />
-          </label>
-          <label>
-            Pay with
-            <SelectMenu
-              value={paymentChoice}
-              options={[
-                { value: "card", label: "Card" },
-                { value: "stablecoin", label: "USDC" }
-              ]}
-              onChange={(value) => setPaymentChoice(value as typeof paymentChoice)}
-            />
-          </label>
-          <label className="wide">
-            Instruction
-            <textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={3} />
-          </label>
-        </div>
+        <div className="agent-run-composer">
+          {showPaymentPicker ? (
+            <label className="agent-run-payment-field">
+              <span>Pay with</span>
+              <SelectMenu
+                value={paymentChoice}
+                options={agentAllowedPaymentMethods.map((kind) => ({
+                  value: kind,
+                  label: paymentMethodLabel(kind)
+                }))}
+                onChange={(value) => setPaymentChoice(value as typeof paymentChoice)}
+              />
+            </label>
+          ) : null}
 
-        {candidates.length ? (
-          <div className="candidate-row">
-            {candidates.map((product) => (
-              <span key={product.id}>
-                {product.name} · {money(product.price_cents)}
-              </span>
-            ))}
+          <label className="agent-run-instruction">
+            <span>Enter Your Instruction</span>
+            <textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={4} />
+          </label>
+
+          {candidates.length ? (
+            <div className="candidate-row agent-run-candidates">
+              {candidates.map((product) => (
+                <span key={product.id}>
+                  {product.name} · {money(product.price_cents)}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="agent-run-actions">
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={runSelectedAgent}
+              disabled={busy || !agentMandate || !vaultId || !agentAllowedPaymentMethods.length}
+            >
+              Start agent
+            </button>
           </div>
-        ) : null}
-
-        <div className="card-foot">
-          <p>Runs authenticate as this agent&apos;s T3N DID, invoke policy on T3N, then settle mock balances.</p>
-          <button
-            type="button"
-            className="primary-btn"
-            onClick={runSelectedAgent}
-            disabled={busy || !agentMandate || !vaultId}
-          >
-            Start agent
-          </button>
         </div>
       </section>
 
