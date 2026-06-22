@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import type { AgentChatBlock, AgentChatProposal } from "@/lib/agent-chat-types";
+import { roleChatMetaName } from "@/lib/agent-utils";
+import { StatusChip } from "@/components/ui/primitives";
 import { AgentChatComposer, AgentChatTypingIndicator, AgentChatWindowChrome } from "@/components/agents/chat/AgentChatChrome";
 import { AgentChatMessage } from "@/components/agents/chat/AgentChatMessage";
 import { useStickToBottom } from "@/hooks/useStickToBottom";
@@ -9,7 +11,6 @@ import { useStickToBottom } from "@/hooks/useStickToBottom";
 type Props = {
   agentName: string;
   agentRole: string;
-  roleLabel: string;
   vaultLabel: string;
   grantStatus: string;
   chat: AgentChatBlock[];
@@ -21,6 +22,7 @@ type Props = {
   onSend: () => void;
   onRun: (block: AgentChatBlock, proposal?: AgentChatProposal) => void;
   onExample: (text: string) => void;
+  onClearHistory?: () => void;
 };
 
 const EXAMPLES: Record<string, string> = {
@@ -34,7 +36,6 @@ const EXAMPLES: Record<string, string> = {
 export function AgentChatPanel({
   agentName,
   agentRole,
-  roleLabel,
   vaultLabel,
   grantStatus,
   chat,
@@ -45,7 +46,8 @@ export function AgentChatPanel({
   onDraftChange,
   onSend,
   onRun,
-  onExample
+  onExample,
+  onClearHistory
 }: Props) {
   const { viewportRef, followOutput, enableStickToBottom } = useStickToBottom<HTMLDivElement>();
   const canSend = Boolean(draft.trim()) && !loading && !busy && canChat;
@@ -71,9 +73,20 @@ export function AgentChatPanel({
           <p className="agent-chat-subtitle">Ask for help within this agent&apos;s role and mandate.</p>
         </div>
         <div className="agent-chat-header-meta">
-          <span className="agent-chat-meta-pill">{roleLabel}</span>
-          <span className="agent-chat-meta-pill">{vaultLabel}</span>
-          <span className="agent-chat-meta-pill">{grantStatus}</span>
+          <div className="agent-chat-meta-badge">
+            <span>role</span>
+            <strong>{roleChatMetaName(agentRole)}</strong>
+          </div>
+          <div className="agent-chat-meta-badge">
+            <span>vault</span>
+            <strong>{vaultLabel}</strong>
+          </div>
+          <StatusChip value={grantStatus} />
+          {onClearHistory && chat.length ? (
+            <button type="button" className="ghost-btn agent-chat-clear-btn" onClick={onClearHistory}>
+              Clear history
+            </button>
+          ) : null}
         </div>
       </header>
 

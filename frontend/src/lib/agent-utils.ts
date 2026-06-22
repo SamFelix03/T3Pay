@@ -24,6 +24,10 @@ export function agentRoleLabel(role: string): string {
   return ROLE_LABELS[role as AgentRole] ?? role.replace(/_/g, " ");
 }
 
+export function roleChatMetaName(role: string): string {
+  return role.replace(/_agent$/, "").replace(/_/g, " ");
+}
+
 export function useCaseForRole(role: string): UseCase {
   switch (role as AgentRole) {
     case "travel_agent":

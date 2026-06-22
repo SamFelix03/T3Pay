@@ -5,6 +5,7 @@ import type { RunTrace, RunTraceStep } from "@/lib/types";
 type Props = {
   trace: RunTrace | null;
   title?: string;
+  fillHeight?: boolean;
 };
 
 function phaseLabel(phase: string): string {
@@ -50,10 +51,12 @@ function TraceStep({ step }: { step: RunTraceStep }) {
   );
 }
 
-export function RunTracePanel({ trace, title = "Run trace" }: Props) {
+export function RunTracePanel({ trace, title = "Run trace", fillHeight = false }: Props) {
+  const shellClass = fillHeight ? "run-trace-card run-trace-card--fill" : "surface-card";
+
   if (!trace?.steps?.length) {
     return (
-      <section className="surface-card">
+      <section className={`${shellClass} run-trace-card--empty`}>
         <span className="section-label">{title}</span>
         <p className="empty-state">Start an agent run to see the full step-by-step trace.</p>
       </section>
@@ -61,7 +64,7 @@ export function RunTracePanel({ trace, title = "Run trace" }: Props) {
   }
 
   return (
-    <section className="surface-card run-trace-card">
+    <section className={`${shellClass} run-trace-card`}>
       <div className="card-head">
         <div>
           <span className="section-label">{title}</span>

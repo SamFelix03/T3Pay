@@ -1,4 +1,4 @@
-export type AppView = "dashboard" | "agent" | "vault" | "marketplace" | "agents" | "runs" | "approvals" | "receipts";
+export type AppView = "dashboard" | "agent" | "vault" | "marketplace" | "agents" | "runs" | "run" | "approvals" | "receipts";
 export type UseCase = "electronics" | "groceries" | "travel";
 export type PaymentChoice = "card" | "stablecoin";
 export type AssetModal = "card" | "wallet" | null;

@@ -908,7 +908,8 @@ textarea:focus {
 }
 
 .status-chip.active,
-.status-chip.issued {
+.status-chip.issued,
+.status-chip.approved {
   background: color-mix(in oklch, var(--vp-success) 16%, var(--vp-card));
   color: oklch(0.78 0.14 145);
 }
@@ -964,6 +965,25 @@ textarea:focus {
 
 .data-row:first-child {
   border-top: 0;
+}
+
+.data-table--runs .data-row--runs {
+  grid-template-columns: 1.4fr auto auto;
+  align-items: center;
+  color: var(--vp-fg);
+}
+
+.data-row--runs .data-row-primary {
+  color: var(--vp-fg);
+  font-weight: 500;
+}
+
+.data-row--runs .data-row-muted {
+  color: var(--vp-muted);
+}
+
+.data-row--runs.active {
+  background: color-mix(in oklch, var(--vp-blue) 10%, var(--vp-input));
 }
 
 .run-meta {
@@ -1419,6 +1439,33 @@ textarea:focus {
 
 .run-trace-card {
   overflow: hidden;
+}
+
+.run-trace-card--fill,
+.run-trace-card--empty.run-trace-card--fill {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--vp-line);
+  border-radius: 16px;
+  background: var(--vp-card);
+  box-shadow: var(--vp-shadow);
+  padding: 18px;
+}
+
+.run-trace-card--fill .card-head {
+  flex-shrink: 0;
+}
+
+.run-trace-card--fill .trace-timeline {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+.run-trace-card--empty.run-trace-card--fill {
+  justify-content: flex-start;
 }
 
 .trace-window {
@@ -2579,6 +2626,22 @@ button.vault-grid-card {
 
 /* Agent workspace chat (pocu-inspired layout) */
 
+.agent-workspace-main-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
+  gap: 14px;
+  align-items: stretch;
+  height: min(72vh, 640px);
+  min-height: 520px;
+}
+
+.agent-workspace-trace-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
 .agent-workspace-chat-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
@@ -2596,8 +2659,8 @@ button.vault-grid-card {
 .agent-chat-window {
   display: flex;
   flex-direction: column;
-  min-height: 560px;
-  max-height: 72vh;
+  height: 100%;
+  min-height: 0;
   border: 1px solid var(--vp-line);
   border-radius: 16px;
   background: var(--vp-card);
@@ -2631,7 +2694,45 @@ button.vault-grid-card {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 6px;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.agent-chat-meta-badge {
+  display: grid;
+  gap: 2px;
+  min-width: 108px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  text-align: left;
+}
+
+.agent-chat-meta-badge span {
+  font-size: 0.625rem;
+  color: var(--vp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agent-chat-meta-badge strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--vp-fg);
+  line-height: 1.2;
+  text-transform: capitalize;
+}
+
+.agent-chat-header-meta .status-chip {
+  align-self: center;
+}
+
+.agent-chat-clear-btn {
+  align-self: center;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .agent-chat-meta-pill {
@@ -2784,10 +2885,53 @@ button.vault-grid-card {
   justify-content: flex-start;
 }
 
-.agent-chat-run-summary {
+.agent-chat-purchase-success {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  width: min(100%, 520px);
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklch, var(--vp-success) 35%, var(--vp-line));
+  background: color-mix(in oklch, var(--vp-success) 10%, var(--vp-surface));
+}
+
+.agent-chat-purchase-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--vp-success) 18%, var(--vp-card));
+  color: var(--vp-success);
+}
+
+.agent-chat-purchase-success-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.agent-chat-purchase-success-copy strong {
+  font-size: 0.9375rem;
+  color: var(--vp-fg);
+}
+
+.agent-chat-purchase-success-copy p {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
   color: var(--vp-muted);
+}
+
+.agent-chat-purchase-success-product {
+  color: var(--vp-fg);
+  font-weight: 600;
+}
+
+.agent-chat-purchase-success-merchant {
+  font-size: 0.75rem;
+  color: var(--vp-subtle);
 }
 
 .agent-chat-composer {
@@ -2862,6 +3006,18 @@ button.vault-grid-card {
 }
 
 @media (max-width: 1100px) {
+  .agent-workspace-main-row {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+  }
+
+  .agent-workspace-main-row .agent-chat-window,
+  .agent-workspace-trace-shell .run-trace-card--fill {
+    height: auto;
+    min-height: 480px;
+  }
+
   .agent-workspace-chat-layout {
     grid-template-columns: 1fr;
     min-height: 0;
@@ -2870,5 +3026,202 @@ button.vault-grid-card {
   .agent-chat-window {
     max-height: none;
     min-height: 480px;
+  }
+}
+
+/* ── Data table (runs page, ui-ref inspired) ───────────────────────────── */
+
+.vp-table-card {
+  border: 1px solid var(--vp-line);
+  border-radius: 16px;
+  background: var(--vp-card);
+  box-shadow: var(--vp-shadow);
+  overflow: hidden;
+}
+
+.vp-table-scroll {
+  overflow-x: auto;
+}
+
+.vp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.8125rem;
+}
+
+.vp-table thead tr {
+  border-bottom: 1px solid var(--vp-line);
+  background: color-mix(in oklch, var(--vp-surface) 70%, var(--vp-card));
+}
+
+.vp-table th {
+  padding: 14px 16px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--vp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.vp-table td {
+  padding: 14px 16px;
+  color: var(--vp-fg);
+  border-top: 1px solid color-mix(in oklch, var(--vp-line) 80%, transparent);
+  vertical-align: middle;
+}
+
+.vp-table tbody tr:first-child td {
+  border-top: none;
+}
+
+.vp-table-row {
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.vp-table-row:hover {
+  background: color-mix(in oklch, var(--vp-blue) 8%, var(--vp-surface));
+}
+
+.vp-table-row--active {
+  background: color-mix(in oklch, var(--vp-blue) 12%, var(--vp-surface));
+}
+
+.vp-table-primary {
+  font-weight: 600;
+  color: var(--vp-fg);
+}
+
+.vp-table-muted {
+  color: var(--vp-muted);
+}
+
+.vp-table-mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.vp-table-truncate {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--vp-muted);
+}
+
+.vp-table-align-right {
+  text-align: right;
+}
+
+.vp-table-sort {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.vp-table-sort:hover {
+  color: var(--vp-fg);
+}
+
+.vp-table--compact th,
+.vp-table--compact td {
+  padding: 10px 14px;
+}
+
+/* ── Run detail page ─────────────────────────────────────────────────── */
+
+.run-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.run-detail-title {
+  margin: 4px 0 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.run-detail-subtitle {
+  margin: 8px 0 0;
+  color: var(--vp-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.run-detail-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.run-detail-meta-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  font-size: 0.6875rem;
+  color: var(--vp-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.field-stack {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.run-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 14px;
+}
+
+.run-detail-rationale {
+  margin: 10px 0 0;
+  color: var(--vp-fg);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.run-detail-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+.run-detail-trace-shell {
+  min-height: 420px;
+  height: min(60vh, 560px);
+}
+
+.run-detail-trace-shell .run-trace-card--fill {
+  height: 100%;
+}
+
+.run-detail-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+@media (max-width: 900px) {
+  .run-detail-grid {
+    grid-template-columns: 1fr;
   }
 }

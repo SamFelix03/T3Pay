@@ -14,10 +14,17 @@ import { MarketplaceView } from "@/components/marketplace/MarketplaceView";
 import { VaultView } from "@/components/vault/VaultView";
 import { AgentsView } from "@/components/agents/AgentsView";
 import { RunsView } from "@/components/runs/RunsView";
+import { RunDetailView } from "@/components/runs/RunDetailView";
 import { ApprovalsView } from "@/components/approvals/ApprovalsView";
 import { ReceiptsView } from "@/components/receipts/ReceiptsView";
 import { useVaultPayApp } from "@/hooks/useVaultPayApp";
-import { buildAppUrl, readViewFromSearchParams } from "@/lib/app-navigation";
+import {
+  AGENT_PARAM,
+  buildAppUrl,
+  readViewFromSearchParams,
+  RUN_PARAM,
+  TAB_PARAM
+} from "@/lib/app-navigation";
 import type { AppView } from "@/lib/types";
 
 function AppShellInner() {
@@ -26,6 +33,10 @@ function AppShellInner() {
   const searchParams = useSearchParams();
   const [assetHub, setAssetHub] = useState<"card" | "wallet" | null>(null);
   const [urlReady, setUrlReady] = useState(false);
+
+  const tab = searchParams.get(TAB_PARAM);
+  const agentId = searchParams.get(AGENT_PARAM);
+  const runId = searchParams.get(RUN_PARAM);
 
   const selectedCard = useMemo(
     () => app.cards.find((card) => card.id === app.selectedPaymentMethodId) ?? app.cards[0] ?? null,
@@ -37,25 +48,26 @@ function AppShellInner() {
   );
 
   const navigate = useCallback(
-    (view: AppView, agentId?: string | null) => {
-      app.setView(view);
-      if (view === "agent" && agentId) app.setSelectedAgentId(agentId);
-      router.replace(buildAppUrl(view, agentId), { scroll: false });
+    (view: AppView, options?: { agentId?: string | null; runId?: string | null }) => {
+      router.replace(buildAppUrl(view, options), { scroll: false });
     },
-    [app, router]
+    [router]
   );
 
   useEffect(() => {
+    app.bindNavigator(navigate);
+  }, [app.bindNavigator, navigate]);
+
+  useEffect(() => {
     if (!app.sessionReady || !app.session) return;
-    const { view, agentId } = readViewFromSearchParams(searchParams);
-    if (view === "agent" && agentId) {
-      app.setSelectedAgentId(agentId);
-      app.setView("agent");
-    } else {
-      app.setView(view);
-    }
+    app.applyRoute(readViewFromSearchParams(searchParams));
     setUrlReady(true);
-  }, [app.sessionReady, app.session, searchParams]);
+  }, [app.sessionReady, app.session, app.applyRoute, tab, agentId, runId]);
+
+  useEffect(() => {
+    if (app.view !== "run" || !app.selectedRunId) return;
+    void app.ensureRunLoaded(app.selectedRunId);
+  }, [app.view, app.selectedRunId, app.ensureRunLoaded]);
 
   function handleAssetRequest(kind: "card" | "wallet") {
     const items = kind === "card" ? app.cards : app.wallets;
@@ -66,8 +78,7 @@ function AppShellInner() {
   }
 
   function openAgentWorkspace(agentId: string) {
-    app.setSelectedAgentId(agentId);
-    navigate("agent", agentId);
+    navigate("agent", { agentId });
   }
 
   if (!app.sessionReady) {
@@ -99,14 +110,14 @@ function AppShellInner() {
       />
 
       <main className="app-main">
-        {app.view !== "agent" ? (
+        {app.view !== "agent" && app.view !== "run" ? (
           <header className="page-header animate-fade-in-up">
             <h1 className="page-title">{meta.title}</h1>
             <p className="page-subtitle">{meta.subtitle}</p>
           </header>
         ) : null}
 
-        <div className={`page-content animate-fade-in-up ${app.view === "agent" ? "" : "stagger-2"}`}>
+        <div className={`page-content animate-fade-in-up ${app.view === "agent" || app.view === "run" ? "" : "stagger-2"}`}>
           {app.view === "dashboard" && (
             <DashboardView
               dashboard={app.dashboard}
@@ -131,10 +142,7 @@ function AppShellInner() {
               agentActivity={app.agentActivity}
               agentRuns={app.agentRuns}
               busy={app.busy}
-              setView={(view) => {
-                const next = typeof view === "function" ? view(app.view) : view;
-                navigate(next);
-              }}
+              onNavigate={navigate}
               runTrace={app.runTrace}
               selectedRunId={app.selectedRunId}
               loadRunTrace={app.loadRunTrace}
@@ -146,6 +154,8 @@ function AppShellInner() {
               chatLoading={app.chatLoading}
               sendAgentChat={app.sendAgentChat}
               runFromChat={app.runFromChat}
+              clearAgentChat={app.clearAgentChat}
+              products={app.products}
             />
           )}
           {app.view === "vault" && (
@@ -168,7 +178,24 @@ function AppShellInner() {
               busy={app.busy}
             />
           )}
-          {app.view === "runs" && <RunsView runs={app.dashboard?.recentRuns ?? []} />}
+          {app.view === "runs" && (
+            <RunsView
+              agents={app.agents}
+              products={app.products}
+              onOpenRun={(id) => navigate("run", { runId: id })}
+            />
+          )}
+          {app.view === "run" && (
+            <RunDetailView
+              run={app.selectedRun}
+              runId={app.selectedRunId}
+              trace={app.runTrace}
+              agents={app.agents}
+              products={app.products}
+              onBack={() => navigate("runs")}
+              onOpenAgent={openAgentWorkspace}
+            />
+          )}
           {app.view === "approvals" && (
             <ApprovalsView
               approvals={app.dashboard?.approvals ?? []}

@@ -24,7 +24,6 @@ import type {
 } from "@/lib/types";
 
 import { MARKETPLACE_USE_CASES } from "@/lib/marketplace";
-import { buildAppUrl } from "@/lib/app-navigation";
 import { effectivePaymentMethodKinds, useCaseForRole } from "@/lib/agent-utils";
 import type { AgentChatBlock, AgentChatProposal, AgentChatResponse } from "@/lib/agent-chat-types";
 import { loadAgentChat, saveAgentChat } from "@/lib/agent-chat-types";
@@ -41,6 +40,7 @@ const VIEW_META: Record<AppView, { title: string; subtitle: string }> = {
   marketplace: { title: "Marketplace", subtitle: "Use cases and merchant services available to your agents." },
   agents: { title: "Agents", subtitle: "T3N DIDs, scoped ADK grants, and revocation." },
   runs: { title: "Runs", subtitle: "Groq selection rationale and sanitized agent memory." },
+  run: { title: "Run details", subtitle: "Full trace, rationale, and purchase outcome." },
   approvals: { title: "Approvals", subtitle: "Pending purchases that need your sign-off." },
   receipts: { title: "Receipts", subtitle: "Verifiable purchase proof and audit trail." }
 };
@@ -63,12 +63,17 @@ export function useVaultPayApp() {
   const [receipt, setReceipt] = useState<AnyRow | null>(null);
   const [runTrace, setRunTrace] = useState<RunTrace | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [selectedRun, setSelectedRun] = useState<AnyRow | null>(null);
   const [showDemoWelcome, setShowDemoWelcome] = useState(false);
   const [demoKitBalances, setDemoKitBalances] = useState({ card: 100_000, wallet: 100_000 });
   const [agentChat, setAgentChat] = useState<AgentChatBlock[]>([]);
   const [chatDraft, setChatDraft] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const syncingRef = useRef(false);
+  const loadedRunIdRef = useRef<string | null>(null);
+  const navigatorRef = useRef<
+    ((view: AppView, options?: { agentId?: string | null; runId?: string | null }) => void) | null
+  >(null);
 
   const vaults = dashboard?.vaults ?? [];
   const agents = dashboard?.agents ?? [];
@@ -446,17 +451,56 @@ export function useVaultPayApp() {
     }
   }
 
-  function syncTabUrl(nextView: AppView, agentId?: string | null) {
-    if (typeof window === "undefined") return;
-    window.history.replaceState(null, "", buildAppUrl(nextView, agentId));
-  }
+  const bindNavigator = useCallback(
+    (fn: (view: AppView, options?: { agentId?: string | null; runId?: string | null }) => void) => {
+      navigatorRef.current = fn;
+    },
+    []
+  );
 
-  function openAgentWorkspace(agentId: string) {
-    setSelectedAgentId(agentId);
-    setSelectedRunId(null);
-    setRunTrace(null);
-    setView("agent");
-    syncTabUrl("agent", agentId);
+  const applyRoute = useCallback(
+    (route: { view: AppView; agentId: string | null; runId: string | null }) => {
+      setView(route.view);
+      if (route.view === "agent" && route.agentId) {
+        setSelectedAgentId(route.agentId);
+      }
+      if (route.view === "run" && route.runId) {
+        setSelectedRunId(route.runId);
+        if (loadedRunIdRef.current !== route.runId) {
+          setSelectedRun(null);
+          setRunTrace(null);
+        }
+      }
+    },
+    []
+  );
+
+  const ensureRunLoaded = useCallback(async (runId: string) => {
+    if (loadedRunIdRef.current === runId) return;
+    const requestedRunId = runId;
+    loadedRunIdRef.current = requestedRunId;
+    try {
+      const result = await apiGet<{ run: AnyRow }>(`/api/agent-runs/${requestedRunId}`);
+      if (loadedRunIdRef.current !== requestedRunId) return;
+      setSelectedRun(result.run);
+      setRunTrace((result.run.trace as RunTrace | null) ?? null);
+    } catch (error) {
+      if (loadedRunIdRef.current === requestedRunId) {
+        loadedRunIdRef.current = null;
+      }
+      toast.error((error as Error).message);
+    }
+  }, []);
+
+  const openAgentWorkspace = useCallback((agentId: string) => {
+    navigatorRef.current?.("agent", { agentId });
+  }, []);
+
+  function clearAgentChat() {
+    if (!selectedAgentId) return;
+    setAgentChat([]);
+    setChatDraft("");
+    saveAgentChat(selectedAgentId, []);
   }
 
   async function loadRunTrace(runId: string) {
@@ -513,7 +557,7 @@ export function useVaultPayApp() {
         agentId: String(selectedAgent.id),
         messages: history.map((block) => ({
           role: block.role,
-          content: block.text ?? block.runSummary ?? ""
+          content: block.text ?? (block.purchaseSuccess ? `Order placed for ${block.purchaseSuccess.productName}` : "")
         }))
       });
       setAgentChat([
@@ -547,11 +591,33 @@ export function useVaultPayApp() {
     const result = await runSelectedAgent({ objective: objectiveText, useCase: useCaseValue });
     if (!result) return;
     const run = result.run;
+    const status = String(run.status ?? "");
+    const productId = String(run.selected_product_id ?? "");
+    const catalogProduct = products.find((item) => item.id === productId);
+    const productName = proposal?.name ?? catalogProduct?.name ?? productId.replace(/^prd_/, "").replace(/_/g, " ");
+    const priceCents = proposal?.priceCents ?? catalogProduct?.price_cents ?? 0;
+    const merchantName = proposal?.merchantName ?? catalogProduct?.merchant_name;
+
+    if (status === "approved") {
+      setAgentChat((current) => [
+        ...current,
+        {
+          role: "assistant",
+          purchaseSuccess: { productName, priceCents, merchantName }
+        }
+      ]);
+      return;
+    }
+
     const rationale = String(run.rationale ?? "");
-    const summary = `Purchase run ${String(run.status)} · ${String(run.selected_product_id ?? "no product")}${rationale ? ` — ${rationale}` : ""}`;
     setAgentChat((current) => [
       ...current,
-      { role: "assistant", text: summary, runSummary: summary }
+      {
+        role: "assistant",
+        text: rationale
+          ? `I couldn't complete that purchase (${status}). ${rationale}`
+          : `I couldn't complete that purchase (${status}).`
+      }
     ]);
   }
 
@@ -594,8 +660,7 @@ export function useVaultPayApp() {
       toast.success("Agent revoked.", toastId);
       if (selectedAgentId === agentId) {
         setSelectedAgentId(null);
-        setView("dashboard");
-        syncTabUrl("dashboard");
+        navigatorRef.current?.("dashboard");
       }
       await refresh();
     } catch (error) {
@@ -661,7 +726,12 @@ export function useVaultPayApp() {
     receipt,
     runTrace,
     selectedRunId,
+    selectedRun,
     loadRunTrace,
+    applyRoute,
+    ensureRunLoaded,
+    bindNavigator,
+    clearAgentChat,
     showDemoWelcome,
     setShowDemoWelcome,
     demoKitBalances,

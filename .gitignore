@@ -5,6 +5,6 @@ build/
 target/
 data/
 .DS_Store
-tmp/
 docs/
+tmp/
 frontend/.next/

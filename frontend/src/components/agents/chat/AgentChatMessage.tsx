@@ -2,6 +2,7 @@
 
 import type { AgentChatBlock, AgentChatProposal } from "@/lib/agent-chat-types";
 import { money } from "@/lib/format";
+import { CheckCircle2 } from "lucide-react";
 
 type Props = {
   block: AgentChatBlock;
@@ -9,11 +10,36 @@ type Props = {
   onRun?: (block: AgentChatBlock, proposal?: AgentChatProposal) => void;
 };
 
+function PurchaseSuccessCard({
+  productName,
+  priceCents,
+  merchantName
+}: NonNullable<AgentChatBlock["purchaseSuccess"]>) {
+  return (
+    <div className="agent-chat-purchase-success">
+      <div className="agent-chat-purchase-success-icon" aria-hidden>
+        <CheckCircle2 strokeWidth={1.75} />
+      </div>
+      <div className="agent-chat-purchase-success-copy">
+        <strong>Purchase completed</strong>
+        <p>
+          I have completed your purchase. You have successfully placed an order for{" "}
+          <span className="agent-chat-purchase-success-product">{productName}</span>
+          {priceCents ? ` (${money(priceCents)})` : ""}.
+        </p>
+        {merchantName ? <span className="agent-chat-purchase-success-merchant">{merchantName}</span> : null}
+      </div>
+    </div>
+  );
+}
+
 export function AgentChatMessage({ block, busy, onRun }: Props) {
   const isUser = block.role === "user";
 
   return (
     <div className={`agent-chat-message ${isUser ? "agent-chat-message--user" : "agent-chat-message--assistant"}`}>
+      {block.purchaseSuccess ? <PurchaseSuccessCard {...block.purchaseSuccess} /> : null}
+
       {block.text ? (
         <div className={`agent-chat-bubble ${isUser ? "agent-chat-bubble--user" : "agent-chat-bubble--assistant"}`}>
           {block.text}
@@ -45,8 +71,6 @@ export function AgentChatMessage({ block, busy, onRun }: Props) {
           </button>
         </div>
       ) : null}
-
-      {block.runSummary ? <p className="agent-chat-run-summary">{block.runSummary}</p> : null}
     </div>
   );
 }

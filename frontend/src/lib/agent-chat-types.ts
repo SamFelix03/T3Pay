@@ -10,6 +10,12 @@ export type AgentChatProposal = {
   currency: string;
 };
 
+export type AgentChatPurchaseSuccess = {
+  productName: string;
+  priceCents: number;
+  merchantName?: string;
+};
+
 export type AgentChatBlock = {
   role: "user" | "assistant";
   text?: string;
@@ -17,7 +23,7 @@ export type AgentChatBlock = {
   canRun?: boolean;
   objective?: string | null;
   useCase?: UseCase | null;
-  runSummary?: string;
+  purchaseSuccess?: AgentChatPurchaseSuccess;
 };
 
 export type AgentChatResponse = {
