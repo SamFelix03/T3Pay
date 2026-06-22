@@ -1,4 +1,11 @@
+<div align="center">
+
+<!-- Replace src below with your logo path or URL -->
+<img width="428" height="187" alt="logo" src="https://github.com/user-attachments/assets/50337c1d-fc56-4c13-a4e0-53605d384cb1" />
+
 # T3Pay
+
+</div>
 
 **T3Pay** is a private agent wallet and spending governor on [Terminal 3 (T3N)](https://terminal3.io) — the gap between *asking* an AI to buy something and actually letting it checkout. Give an agent real **card or stablecoin** budget, cap it to merchants and categories you choose, and let it run: it can **place orders, hit limits, and route approvals - without ever seeing your credentials**. Your rules live in sealed mandates, enforcement runs in the TEE, and every attempt leaves an auditable trail you can prove.
 
