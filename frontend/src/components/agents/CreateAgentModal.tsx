@@ -56,9 +56,9 @@ export function CreateAgentModal({ open, vaults, paymentMethods, busy, onClose, 
   const [role, setRole] = useState<AgentRole>("shopping_agent");
   const [vaultId, setVaultId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<AgentPaymentMethod>("both");
-  const [budget, setBudget] = useState(500);
-  const [perPurchase, setPerPurchase] = useState(150);
-  const [approvalThreshold, setApprovalThreshold] = useState(100);
+  const [budget, setBudget] = useState("500");
+  const [perPurchase, setPerPurchase] = useState("150");
+  const [approvalThreshold, setApprovalThreshold] = useState("100");
   const stageBodyRef = useRef<HTMLDivElement>(null);
   const [stageBodyHeight, setStageBodyHeight] = useState<number | null>(null);
 
@@ -69,9 +69,9 @@ export function CreateAgentModal({ open, vaults, paymentMethods, busy, onClose, 
     setRole("shopping_agent");
     setVaultId(vaults[0]?.id ? String(vaults[0].id) : "");
     setPaymentMethod("both");
-    setBudget(500);
-    setPerPurchase(150);
-    setApprovalThreshold(100);
+    setBudget("500");
+    setPerPurchase("150");
+    setApprovalThreshold("100");
   }, [open, vaults]);
 
   const vaultMethods = useMemo(
@@ -110,12 +110,18 @@ export function CreateAgentModal({ open, vaults, paymentMethods, busy, onClose, 
   const isCompact = stage === 1;
   const canAdvanceStage1 = name.trim().length > 0;
   const canAdvanceStage3 = Boolean(vaultId) && hasFunding && paymentReady;
+  const budgetValue = Number(budget);
+  const perPurchaseValue = Number(perPurchase);
+  const approvalValue = Number(approvalThreshold);
   const canSubmit =
     canAdvanceStage1 &&
     canAdvanceStage3 &&
-    budget > 0 &&
-    perPurchase > 0 &&
-    approvalThreshold >= 0;
+    budget !== "" &&
+    perPurchase !== "" &&
+    approvalThreshold !== "" &&
+    budgetValue > 0 &&
+    perPurchaseValue > 0 &&
+    approvalValue >= 0;
 
   function goBack() {
     setStage((current) => (current > 1 ? ((current - 1) as StageId) : current));
@@ -134,9 +140,9 @@ export function CreateAgentModal({ open, vaults, paymentMethods, busy, onClose, 
       role,
       paymentMethod,
       vaultId,
-      budgetCents: Math.round(budget * 100),
-      perPurchaseLimitCents: Math.round(perPurchase * 100),
-      approvalThresholdCents: Math.round(approvalThreshold * 100)
+      budgetCents: Math.round(budgetValue * 100),
+      perPurchaseLimitCents: Math.round(perPurchaseValue * 100),
+      approvalThresholdCents: Math.round(approvalValue * 100)
     });
   }
 
@@ -285,13 +291,13 @@ export function CreateAgentModal({ open, vaults, paymentMethods, busy, onClose, 
                   <div className="wizard-budget-fields">
                     <label className="wizard-budget-field">
                       <span>Total budget ($)</span>
-                      <input type="number" min={1} value={budget} onChange={(event) => setBudget(Number(event.target.value))} />
+                      <input type="number" min={1} value={budget} onChange={(event) => setBudget(event.target.value)} />
                       <small>Maximum amount this agent can spend across all purchases in this mandate.</small>
                     </label>
 
                     <label className="wizard-budget-field">
                       <span>Per purchase limit ($)</span>
-                      <input type="number" min={1} value={perPurchase} onChange={(event) => setPerPurchase(Number(event.target.value))} />
+                      <input type="number" min={1} value={perPurchase} onChange={(event) => setPerPurchase(event.target.value)} />
                       <small>Cap for any single checkout attempt.</small>
                     </label>
 
@@ -301,7 +307,7 @@ export function CreateAgentModal({ open, vaults, paymentMethods, busy, onClose, 
                         type="number"
                         min={0}
                         value={approvalThreshold}
-                        onChange={(event) => setApprovalThreshold(Number(event.target.value))}
+                        onChange={(event) => setApprovalThreshold(event.target.value)}
                       />
                       <small>Purchases above this amount require your manual approval first.</small>
                     </label>

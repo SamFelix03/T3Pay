@@ -178,8 +178,9 @@ function AppShellInner() {
               busy={app.busy}
             />
           )}
-          {app.view === "runs" && (
+          {app.view === "runs" && app.session && (
             <RunsView
+              userId={app.session.userId}
               agents={app.agents}
               products={app.products}
               onOpenRun={(id) => navigate("run", { runId: id })}

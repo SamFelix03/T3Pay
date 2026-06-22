@@ -13,6 +13,10 @@ const createPaymentMethodSchema = z.object({
   currency: z.enum(["USD", "USDC"])
 });
 
+const attachPaymentMethodSchema = z.object({
+  paymentMethodId: z.string().min(1)
+});
+
 export function registerVaultRoutes(router: Router): void {
   router.post("/api/vaults", async ({ req, app }) => {
     const body = await readJson(req, createVaultSchema);
@@ -59,6 +63,28 @@ export function registerVaultRoutes(router: Router): void {
     return { paymentMethod: { id: paymentMethodId, vaultId: params.id, type: body.type, alias: body.alias, display, balanceCents: body.balanceCents, currency: body.currency, status: "active", createdAt } };
   });
 
+  router.post("/api/vaults/:id/attach-payment-method", async ({ req, params, app }) => {
+    const body = await readJson(req, attachPaymentMethodSchema);
+    const vault = await app.repo.getById<any>("vaults", params.id, "vault");
+    const paymentMethod = await app.repo.getById<any>("payment_methods", body.paymentMethodId, "payment method");
+    const sourceVault = await app.repo.getById<any>("vaults", paymentMethod.vault_id, "vault");
+    if (sourceVault.user_id !== vault.user_id) {
+      throw notFound("payment method");
+    }
+    if (String(paymentMethod.vault_id) === params.id) {
+      return { paymentMethod: decodePaymentMethod(paymentMethod) };
+    }
+    const updated = await app.repo.update("payment_methods", body.paymentMethodId, { vault_id: params.id });
+    await writeAudit(app.repo, {
+      userId: vault.user_id,
+      type: "vault.payment_method_attached",
+      entityType: "payment_method",
+      entityId: body.paymentMethodId,
+      payload: { paymentMethodId: body.paymentMethodId, fromVaultId: paymentMethod.vault_id, toVaultId: params.id }
+    });
+    return { paymentMethod: decodePaymentMethod(updated) };
+  });
+
   router.post("/api/vault/payment-method", async ({ req, app }) => {
     const body = await readJson(req, createPaymentMethodSchema.extend({ vaultId: z.string().min(1) }));
     const route = router as unknown as { __noop?: never };
@@ -67,4 +93,18 @@ export function registerVaultRoutes(router: Router): void {
     if (!vault) throw notFound("vault");
     return { message: "Use POST /api/vaults/:id/payment-methods", vaultId: body.vaultId };
   });
+}
+
+function decodePaymentMethod(row: any) {
+  return {
+    id: row.id,
+    vaultId: row.vault_id,
+    type: row.type,
+    alias: row.alias,
+    display: row.display,
+    balanceCents: row.balance_cents,
+    currency: row.currency,
+    status: row.status,
+    createdAt: row.created_at
+  };
 }

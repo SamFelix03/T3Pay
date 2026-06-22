@@ -349,46 +349,23 @@ export function useVaultPayApp() {
 
   async function createVault(input: CreateVaultInput) {
     if (!session) return;
-    const activeSession = session;
     setBusy(true);
     const toastId = toast.loading("Creating vault…");
     try {
-      const vault = await apiPost<{ vault: AnyRow }>("/api/vaults", { userId: activeSession.userId });
+      const vault = await apiPost<{ vault: AnyRow }>("/api/vaults", { userId: session.userId });
       const vaultId = String(vault.vault.id);
       saveVaultLabel(vaultId, input.label.trim() || "Vault");
 
       if (input.cardId) {
-        const existing = paymentMethods.find((method) => String(method.id) === input.cardId);
-        if (existing) {
-          const created = await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/payment-methods`, {
-            type: "card",
-            alias: String(existing.alias),
-            balanceCents: Number(existing.balance_cents ?? 0),
-            currency: "USD"
-          });
-          const preview = getAssetPreview(String(existing.id));
-          saveCardPreview(
-            String(created.paymentMethod.id),
-            preview?.type === "card" ? preview.card : createMockCard(activeSession.displayName)
-          );
-        }
+        await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/attach-payment-method`, {
+          paymentMethodId: input.cardId
+        });
       }
 
       if (input.walletId) {
-        const existing = paymentMethods.find((method) => String(method.id) === input.walletId);
-        if (existing) {
-          const created = await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/payment-methods`, {
-            type: "stablecoin",
-            alias: String(existing.alias),
-            balanceCents: Number(existing.balance_cents ?? 0),
-            currency: "USDC"
-          });
-          const preview = getAssetPreview(String(existing.id));
-          saveWalletPreview(
-            String(created.paymentMethod.id),
-            preview?.type === "stablecoin" ? preview.wallet : createMockWallet()
-          );
-        }
+        await apiPost<{ paymentMethod: AnyRow }>(`/api/vaults/${vaultId}/attach-payment-method`, {
+          paymentMethodId: input.walletId
+        });
       }
 
       toast.success("Vault created.", toastId);

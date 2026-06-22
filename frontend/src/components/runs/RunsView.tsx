@@ -8,6 +8,7 @@ import { timeAgo } from "@/lib/format";
 import { EmptyState, StatusChip } from "@/components/ui/primitives";
 
 type Props = {
+  userId: string;
   agents: AnyRow[];
   products: Product[];
   onOpenRun: (runId: string) => void;
@@ -15,7 +16,7 @@ type Props = {
 
 type SortKey = "created_at" | "agent" | "use_case" | "product" | "status" | "confidence";
 
-export function RunsView({ agents, products, onOpenRun }: Props) {
+export function RunsView({ userId, agents, products, onOpenRun }: Props) {
   const [runs, setRuns] = useState<AnyRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
@@ -24,7 +25,7 @@ export function RunsView({ agents, products, onOpenRun }: Props) {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    apiGet<{ runs: AnyRow[] }>("/api/agent-runs")
+    apiGet<{ runs: AnyRow[] }>(`/api/agent-runs?userId=${encodeURIComponent(userId)}`)
       .then((result) => {
         if (!active) return;
         setRuns(result.runs ?? []);
@@ -39,7 +40,7 @@ export function RunsView({ agents, products, onOpenRun }: Props) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [userId]);
 
   const sortedRuns = useMemo(() => {
     const next = [...runs];

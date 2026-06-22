@@ -12,12 +12,31 @@ const runSchema = z.object({
 });
 
 export function registerAgentRunRoutes(router: Router): void {
-  router.get("/api/agent-runs", ({ app, url }) => {
+  router.get("/api/agent-runs", async ({ app, url }) => {
     const agentId = url.searchParams.get("agentId");
-    return (agentId
-      ? app.repo.list("agent_runs", { eq: { agent_id: agentId }, order: { column: "created_at", ascending: false } })
-      : app.repo.list("agent_runs", { order: { column: "created_at", ascending: false }, limit: 100 })
-    ).then((runs) => ({ runs: runs.map(decodeRun) }));
+    const userId = url.searchParams.get("userId");
+
+    if (agentId) {
+      const runs = await app.repo.list<any>("agent_runs", {
+        eq: { agent_id: agentId },
+        order: { column: "created_at", ascending: false }
+      });
+      return { runs: runs.map(decodeRun) };
+    }
+
+    if (userId) {
+      const agents = await app.repo.list<any>("agents", { eq: { user_id: userId } });
+      const agentIds = agents.map((agent: any) => agent.id);
+      if (!agentIds.length) return { runs: [] };
+      const runs = await app.repo.list<any>("agent_runs", {
+        in: { agent_id: agentIds },
+        order: { column: "created_at", ascending: false },
+        limit: 100
+      });
+      return { runs: runs.map(decodeRun) };
+    }
+
+    return { runs: [] };
   });
 
   router.get("/api/agent-runs/:id", async ({ params, app }) => {
