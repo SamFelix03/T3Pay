@@ -77,42 +77,51 @@ Walk through the live app at **[t3pay.vercel.app](https://t3pay.vercel.app)** �
 ### 1. Sign in
 
 <!-- screenshot: login / welcome -->
+<img width="1512" height="949" alt="Screenshot 2026-06-22 at 7 44 12 PM" src="https://github.com/user-attachments/assets/ce164fb5-f788-475a-97b9-e325eef31fee" />
 
 Create an account or sign in to open your dashboard.
 
 ### 2. Create your first vault
 
 <!-- screenshot: vault creation -->
+<img width="1512" height="949" alt="Screenshot 2026-06-22 at 7 44 55 PM" src="https://github.com/user-attachments/assets/c4af6f3a-e053-48ba-b184-8d621e7773aa" />
 
 Add a demo card or wallet and create a vault to fund your agents.
 
 ### 3. Create your first agent
 
 <!-- screenshot: create agent -->
+<img width="1066" height="693" alt="Screenshot 2026-06-22 at 7 46 08 PM" src="https://github.com/user-attachments/assets/4192c07c-d5ae-44bc-882e-8cdab8d02cff" />
 
 Pick a role, set a spending budget and limits, and launch your agent.
 
 ### 4. Ask the agent to buy something
 
 <!-- screenshot: agent chat -->
+<img width="1331" height="848" alt="Screenshot 2026-06-22 at 7 47 16 PM" src="https://github.com/user-attachments/assets/7ef8eaa2-78c4-40f5-b42f-e57ab66fa333" />
 
 Open the agent workspace and ask it to find and purchase an item — e.g. *"Find a USB-C charger under $50."*
 
 ### 5. Purchase succeeds — review the proof
 
 <!-- screenshot: success + runs / receipts -->
+<img width="1331" height="848" alt="Screenshot 2026-06-22 at 7 47 53 PM" src="https://github.com/user-attachments/assets/e9d70f50-1efe-4209-8e72-c1c21bd3c542" />
+
+<img width="1331" height="848" alt="Screenshot 2026-06-22 at 7 48 01 PM" src="https://github.com/user-attachments/assets/a0d08c63-8ca5-43af-8eee-1fc77254d1ea" />
 
 When the item is within your rules, the purchase completes. Check **Runs**, **Receipts**, and activity for the full audit trail.
 
 ### 6. Over-budget purchases are blocked
 
 <!-- screenshot: purchase blocked -->
+<img width="1331" height="848" alt="Screenshot 2026-06-22 at 7 48 34 PM" src="https://github.com/user-attachments/assets/21d06616-e73a-4e39-996e-a539f1cace28" />
 
 Try something above your budget or per-purchase limit (e.g. a $260 laptop on a $150 cap). The agent can still propose it — T3Pay rejects the checkout and shows why.
 
 ### 7. Revoked agents lose access
 
 <!-- screenshot: revoke + blocked purchase -->
+<img width="1331" height="848" alt="Screenshot 2026-06-22 at 7 49 20 PM" src="https://github.com/user-attachments/assets/670e2043-46d4-48f0-8520-43cb3b7b964a" />
 
 Revoke the agent from your dashboard, then try another purchase. Access is denied immediately — no silent spending after you pull the plug.
 
@@ -177,6 +186,9 @@ Every attempt ends in one of: `approved` · `rejected` · `pending_approval` · 
 ## How it all works
 
 End-to-end architecture: **Next.js UI** → **Node API** → **T3N SDK + WASM contract** → **Merchant settlement** (local Stripe-style rail; no official T3 test merchant exists).
+<div align="center">
+<img width="677" height="621" alt="Screenshot 2026-06-22 at 4 53 04 PM" src="https://github.com/user-attachments/assets/bc400c8f-3dba-409b-a80d-5f47a6ee5c54" />
+</div>
 
 ```
 User ──► App (Next.js) ──► API (Node) ──► T3N TenantClient / T3nClient
