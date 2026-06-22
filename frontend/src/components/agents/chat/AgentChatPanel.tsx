@@ -25,12 +25,32 @@ type Props = {
   onClearHistory?: () => void;
 };
 
-const EXAMPLES: Record<string, string> = {
-  shopping_agent: "Find a useful electronics purchase under my budget.",
-  travel_agent: "Book a hotel night within my approval threshold.",
-  subscription_agent: "Put together a weekly grocery basket under budget.",
-  research_only: "What merchants and categories am I allowed to research?",
-  custom_agent: "What can you help me buy with my current mandate?"
+const EXAMPLES: Record<string, string[]> = {
+  shopping_agent: [
+    "Find a USB-C charger under $50 from an approved electronics merchant.",
+    "Compare grocery staples I can buy within my per-purchase limit.",
+    "What electronics deals fit my remaining budget?"
+  ],
+  travel_agent: [
+    "Book a hotel night within my approval threshold.",
+    "Find a travel option under my per-purchase limit.",
+    "What travel merchants are in my mandate?"
+  ],
+  subscription_agent: [
+    "Put together a weekly grocery basket under budget.",
+    "Set up a recurring grocery purchase within my limit.",
+    "What subscription-style groceries can I order today?"
+  ],
+  research_only: [
+    "What merchants and categories am I allowed to research?",
+    "Summarize my spending limits without making a purchase.",
+    "Which products are in scope for my mandate?"
+  ],
+  custom_agent: [
+    "What can you help me buy with my current mandate?",
+    "Find something useful under my per-purchase limit.",
+    "What merchants and categories can you shop from?"
+  ]
 };
 
 export function AgentChatPanel({
@@ -53,7 +73,7 @@ export function AgentChatPanel({
   const canSend = Boolean(draft.trim()) && !loading && !busy && canChat;
   const showTyping = loading;
   const isEmpty = chat.length === 0;
-  const example = EXAMPLES[agentRole] ?? EXAMPLES.custom_agent;
+  const examples = EXAMPLES[agentRole] ?? EXAMPLES.custom_agent;
 
   useEffect(() => {
     followOutput();
@@ -95,9 +115,18 @@ export function AgentChatPanel({
           {isEmpty ? (
             <div className="agent-chat-empty">
               <p>Tell this agent what you need. It will stay within its role and spending mandate.</p>
-              <button type="button" className="ghost-btn" onClick={() => onExample(example)}>
-                Try an example
-              </button>
+              <div className="agent-chat-example-prompts" role="list" aria-label="Example prompts">
+                {examples.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    className="agent-chat-example-prompt"
+                    onClick={() => onExample(prompt)}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : null}
 

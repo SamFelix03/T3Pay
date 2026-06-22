@@ -28,9 +28,11 @@ export type AgentChatInput = {
   agentName: string;
   agentRole: string;
   budgetRemainingCents: number;
+  perPurchaseLimitCents: number;
+  approvalThresholdCents: number;
   allowedCategories: string[];
   allowedMerchants: string[];
-  eligibleProducts: ChatProduct[];
+  catalogProducts: ChatProduct[];
   messages: Array<{ role: "user" | "assistant"; content: string }>;
 };
 
@@ -42,7 +44,7 @@ export async function chatWithAgentGroq(env: Env, input: AgentChatInput): Promis
   const role = input.agentRole;
   const purchasesAllowed = roleAllowsPurchases(role);
   const roleUseCases = useCasesForRole(role);
-  const productCatalog = input.eligibleProducts.map((product) => ({
+  const productCatalog = input.catalogProducts.map((product) => ({
     id: product.id,
     merchantId: product.merchantId,
     name: product.name,
@@ -55,18 +57,20 @@ export async function chatWithAgentGroq(env: Env, input: AgentChatInput): Promis
     `You are ${input.agentName}, a ${roleLabel(role)} in VaultPay.`,
     `Responsibility: ${roleResponsibility(role)}`,
     purchasesAllowed
-      ? `You may help with purchases only inside your role and mandate. Supported use cases for this role: ${roleUseCases.join(", ") || "none"}.`
+      ? `You may help with purchases inside your role. Supported use cases for this role: ${roleUseCases.join(", ") || "none"}.`
       : "You must not initiate purchases or propose products to buy. Politely refuse purchase requests and offer research or policy guidance instead.",
-    `Budget remaining: ${input.budgetRemainingCents} cents.`,
+    `Mandate context (enforced at checkout, not when browsing): budget remaining ${input.budgetRemainingCents} cents, per-purchase limit ${input.perPurchaseLimitCents} cents, approval threshold ${input.approvalThresholdCents} cents.`,
     `Allowed categories: ${input.allowedCategories.join(", ")}.`,
     `Allowed merchants: ${input.allowedMerchants.join(", ")}.`,
+    "You see the full marketplace catalog in catalogProducts. Do not hide products because of price or limits — propose what the user asked for.",
+    "If a requested product exceeds mandate limits, still propose it when it matches the request, and explain in reply that checkout may fail until limits are raised or a cheaper option is chosen.",
     "Return JSON only with keys: reply, inScope, intent, useCase, objective, proposalProductIds.",
     "reply: natural conversational text for the user.",
-    "inScope: false when the request is outside your role, mandate, or purchase authority.",
-    "intent: chat for general Q&A, clarify when you need more detail, purchase when the user wants to buy something in scope.",
+    "inScope: false when the request is outside your role or purchase authority.",
+    "intent: chat for general Q&A, clarify when you need more detail, purchase when the user wants to buy something.",
     "useCase: electronics, groceries, or travel when intent is purchase; otherwise null.",
     "objective: concise purchase instruction when intent is purchase; otherwise null.",
-    "proposalProductIds: up to 3 product ids from eligibleProducts that fit the request when intent is purchase; otherwise [].",
+    "proposalProductIds: up to 3 product ids from catalogProducts that fit the request when intent is purchase; otherwise [].",
     "Never claim you completed a purchase — the app runs policy and settlement separately.",
     "Keep reply concise and helpful."
   ].join("\n");
@@ -86,7 +90,7 @@ export async function chatWithAgentGroq(env: Env, input: AgentChatInput): Promis
         {
           role: "user",
           content: JSON.stringify({
-            eligibleProducts: productCatalog,
+            catalogProducts: productCatalog,
             conversation: input.messages
           })
         }
@@ -130,7 +134,7 @@ export async function chatWithAgentGroq(env: Env, input: AgentChatInput): Promis
     };
   }
 
-  const validIds = new Set(input.eligibleProducts.map((product) => product.id));
+  const validIds = new Set(input.catalogProducts.map((product) => product.id));
   const proposalProductIds = parsed.proposalProductIds.filter((id) => validIds.has(id));
 
   return {

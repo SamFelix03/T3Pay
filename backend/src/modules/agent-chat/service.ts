@@ -1,8 +1,9 @@
 import { conflict, notFound } from "../../domain/errors";
 import type { Env } from "../../config/env";
 import type { SupabaseRepository } from "../../db/supabase";
-import { roleAllowsPurchases, useCasesForRole } from "./role-scope";
-import { chatWithAgentGroq, type ChatProduct } from "./groq-chat";
+import { loadProductCatalog } from "../catalog/products";
+import { roleAllowsPurchases } from "./role-scope";
+import { chatWithAgentGroq } from "./groq-chat";
 
 export type AgentChatMessage = {
   role: "user" | "assistant";
@@ -29,43 +30,6 @@ export type AgentChatResponse = {
   canRun: boolean;
 };
 
-async function loadEligibleProducts(
-  repo: SupabaseRepository,
-  mandate: any,
-  role: string
-): Promise<ChatProduct[]> {
-  const allowedCategories = JSON.parse(mandate.allowed_categories_json) as string[];
-  const allowedMerchants = JSON.parse(mandate.allowed_merchants_json) as string[];
-  const roleUseCases = useCasesForRole(role);
-  const categories = allowedCategories.filter((category) =>
-    roleUseCases.includes(category as "electronics" | "groceries" | "travel")
-  );
-
-  const [rawProducts, merchants] = await Promise.all([
-    repo.list<any>("products", { order: { column: "price_cents", ascending: true }, limit: 30 }),
-    repo.list<any>("merchants")
-  ]);
-  const merchantById = new Map(merchants.map((merchant: any) => [merchant.id, merchant]));
-
-  return rawProducts
-    .filter(
-      (product: any) =>
-        product.price_cents <= mandate.budget_remaining_cents &&
-        categories.includes(product.category) &&
-        allowedMerchants.includes(product.merchant_id)
-    )
-    .slice(0, 9)
-    .map((product: any) => ({
-      id: product.id,
-      merchantId: product.merchant_id,
-      merchantName: merchantById.get(product.merchant_id)?.name ?? product.merchant_id,
-      name: product.name,
-      category: product.category,
-      priceCents: product.price_cents,
-      currency: product.currency
-    }));
-}
-
 export async function handleAgentChat(
   repo: SupabaseRepository,
   env: Env,
@@ -80,20 +44,22 @@ export async function handleAgentChat(
   const mandate = mandates[0];
   if (!mandate) throw notFound("mandate not found for agent");
 
-  const eligibleProducts = await loadEligibleProducts(repo, mandate, String(agent.role ?? "custom_agent"));
+  const catalogProducts = await loadProductCatalog(repo);
   const decision = await chatWithAgentGroq(env, {
     agentName: String(agent.name),
     agentRole: String(agent.role ?? "custom_agent"),
     budgetRemainingCents: mandate.budget_remaining_cents,
+    perPurchaseLimitCents: mandate.per_purchase_limit_cents,
+    approvalThresholdCents: mandate.approval_threshold_cents,
     allowedCategories: JSON.parse(mandate.allowed_categories_json),
     allowedMerchants: JSON.parse(mandate.allowed_merchants_json),
-    eligibleProducts,
+    catalogProducts,
     messages: input.messages
   });
 
   const proposals = decision.proposalProductIds
-    .map((productId) => eligibleProducts.find((product) => product.id === productId))
-    .filter((product): product is ChatProduct => Boolean(product))
+    .map((productId) => catalogProducts.find((product) => product.id === productId))
+    .filter((product): product is (typeof catalogProducts)[number] => Boolean(product))
     .map((product) => ({
       id: product.id,
       merchantId: product.merchantId,

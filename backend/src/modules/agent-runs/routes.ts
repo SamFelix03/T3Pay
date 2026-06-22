@@ -8,7 +8,9 @@ const runSchema = z.object({
   paymentMethodId: z.string().min(1),
   objective: z.string().min(1),
   useCase: z.enum(["electronics", "groceries", "travel"]),
-  candidateLimit: z.number().int().min(2).max(3).default(3)
+  candidateLimit: z.number().int().min(1).max(50).default(20),
+  selectedProductId: z.string().min(1).optional(),
+  selectedMerchantId: z.string().min(1).optional()
 });
 
 export function registerAgentRunRoutes(router: Router): void {
@@ -21,7 +23,7 @@ export function registerAgentRunRoutes(router: Router): void {
         eq: { agent_id: agentId },
         order: { column: "created_at", ascending: false }
       });
-      return { runs: runs.map(decodeRun) };
+      return { runs: await Promise.all(runs.map((run) => decodeRun(app.repo, run))) };
     }
 
     if (userId) {
@@ -33,7 +35,7 @@ export function registerAgentRunRoutes(router: Router): void {
         order: { column: "created_at", ascending: false },
         limit: 100
       });
-      return { runs: runs.map(decodeRun) };
+      return { runs: await Promise.all(runs.map((run) => decodeRun(app.repo, run))) };
     }
 
     return { runs: [] };
@@ -41,7 +43,7 @@ export function registerAgentRunRoutes(router: Router): void {
 
   router.get("/api/agent-runs/:id", async ({ params, app }) => {
     const run = await app.repo.getById("agent_runs", params.id, "agent run");
-    return { run: decodeRun(run) };
+    return { run: await decodeRun(app.repo, run) };
   });
 
   router.post("/api/agent-runs", async ({ req, app }) => {

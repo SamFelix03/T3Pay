@@ -2,7 +2,7 @@
 
 import type { AgentChatBlock, AgentChatProposal } from "@/lib/agent-chat-types";
 import { money } from "@/lib/format";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Clock3, XCircle } from "lucide-react";
 
 type Props = {
   block: AgentChatBlock;
@@ -33,12 +33,50 @@ function PurchaseSuccessCard({
   );
 }
 
+function PurchaseFailureCard({
+  merchantName,
+  message
+}: NonNullable<AgentChatBlock["purchaseFailure"]>) {
+  return (
+    <div className="agent-chat-purchase-failure">
+      <div className="agent-chat-purchase-failure-icon" aria-hidden>
+        <XCircle strokeWidth={1.75} />
+      </div>
+      <div className="agent-chat-purchase-failure-copy">
+        <strong>Purchase blocked</strong>
+        <p>{message}</p>
+        {merchantName ? <span className="agent-chat-purchase-failure-merchant">{merchantName}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+function PurchasePendingCard({
+  merchantName,
+  message
+}: NonNullable<AgentChatBlock["purchasePending"]>) {
+  return (
+    <div className="agent-chat-purchase-pending">
+      <div className="agent-chat-purchase-pending-icon" aria-hidden>
+        <Clock3 strokeWidth={1.75} />
+      </div>
+      <div className="agent-chat-purchase-pending-copy">
+        <strong>Approval required</strong>
+        <p>{message}</p>
+        {merchantName ? <span className="agent-chat-purchase-pending-merchant">{merchantName}</span> : null}
+      </div>
+    </div>
+  );
+}
+
 export function AgentChatMessage({ block, busy, onRun }: Props) {
   const isUser = block.role === "user";
 
   return (
     <div className={`agent-chat-message ${isUser ? "agent-chat-message--user" : "agent-chat-message--assistant"}`}>
       {block.purchaseSuccess ? <PurchaseSuccessCard {...block.purchaseSuccess} /> : null}
+      {block.purchaseFailure ? <PurchaseFailureCard {...block.purchaseFailure} /> : null}
+      {block.purchasePending ? <PurchasePendingCard {...block.purchasePending} /> : null}
 
       {block.text ? (
         <div className={`agent-chat-bubble ${isUser ? "agent-chat-bubble--user" : "agent-chat-bubble--assistant"}`}>

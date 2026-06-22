@@ -5,6 +5,7 @@ import { id } from "../../domain/ids";
 import { asJson, nowIso } from "../shared";
 import { writeAudit } from "../activity/service";
 import type { VaultpayT3nGateway } from "../t3n/gateway";
+import { loadProductCatalog } from "../catalog/products";
 import { chooseProductWithGroq, type CandidateProduct } from "./groq";
 import { RunTrace } from "./trace";
 import { runAgentTask, type AgentTaskInput } from "../tasks/service";
@@ -16,6 +17,8 @@ export type AgentRunInput = {
   objective: string;
   useCase: "electronics" | "groceries" | "travel";
   candidateLimit: number;
+  selectedProductId?: string;
+  selectedMerchantId?: string;
 };
 
 export async function executeAgentRun(
@@ -125,55 +128,73 @@ export async function executeAgentRun(
     paymentMethods: JSON.parse(mandate.payment_methods_json)
   });
 
-  const [rawProducts, merchants] = await Promise.all([
-    repo.list<any>("products", { eq: { category: body.useCase }, order: { column: "price_cents", ascending: true }, limit: body.candidateLimit }),
-    repo.list<any>("merchants")
+  const [catalogProducts, rawProductRows] = await Promise.all([
+    loadProductCatalog(repo, { limit: body.candidateLimit }),
+    repo.list<any>("products", { order: { column: "price_cents", ascending: true }, limit: body.candidateLimit })
   ]);
-  const merchantById = new Map(merchants.map((merchant: any) => [merchant.id, merchant]));
-  const products = rawProducts.filter(
-    (product: any) =>
-      product.price_cents <= mandate.budget_remaining_cents &&
-      allowedCategories.includes(product.category) &&
-      allowedMerchants.includes(product.merchant_id)
-  );
-
-  const candidates: CandidateProduct[] = products.map((product: any) => ({
+  const candidates: CandidateProduct[] = catalogProducts.map((product) => ({
     id: product.id,
-    merchantId: product.merchant_id,
-    merchantName: merchantById.get(product.merchant_id)?.name ?? product.merchant_id,
+    merchantId: product.merchantId,
+    merchantName: product.merchantName,
     name: product.name,
     category: product.category,
-    priceCents: product.price_cents,
+    priceCents: product.priceCents,
     currency: product.currency
   }));
 
-  trace.step("catalog", "Built eligible product candidate set", {
+  trace.step("catalog", "Built full product candidate set", {
     useCase: body.useCase,
-    rawProductCount: rawProducts.length,
-    eligibleCount: candidates.length,
+    candidateCount: candidates.length,
+    note: "Catalog is unfiltered — mandate policy is enforced at T3N validate-and-pay",
     candidates
   });
 
-  const decision = await chooseProductWithGroq(
-    env,
-    {
-      objective: body.objective,
-      useCase: body.useCase,
-      candidates,
-      budgetRemainingCents: mandate.budget_remaining_cents,
-      allowedCategories,
-      allowedMerchants
-    },
-    trace
-  );
+  let decision: Awaited<ReturnType<typeof chooseProductWithGroq>>;
+  if (body.selectedProductId && body.selectedMerchantId) {
+    const selected = candidates.find(
+      (product) => product.id === body.selectedProductId && product.merchantId === body.selectedMerchantId
+    );
+    if (!selected) throw conflict("selected product missing from catalog");
+    decision = {
+      selectedProductId: selected.id,
+      selectedMerchantId: selected.merchantId,
+      rationale: `User selected ${selected.name} from chat.`,
+      confidence: 1,
+      meta: {
+        model: env.groqModel,
+        candidateCount: candidates.length,
+        requestPayload: { objective: body.objective, selectedProductId: selected.id },
+        rawResponseContent: "",
+        usage: null,
+        finishReason: "user_selected"
+      }
+    };
+    trace.success("selection", "User-selected product locked in", {
+      selectedProductId: selected.id,
+      selectedMerchantId: selected.merchantId,
+      selectedProductName: selected.name
+    });
+  } else {
+    decision = await chooseProductWithGroq(
+      env,
+      {
+        objective: body.objective,
+        useCase: body.useCase,
+        candidates,
+        budgetRemainingCents: mandate.budget_remaining_cents,
+        allowedCategories,
+        allowedMerchants
+      },
+      trace
+    );
+    trace.step("selection", "Product selection locked in", {
+      groqMeta: decision.meta,
+      selectedProductId: decision.selectedProductId,
+      selectedMerchantId: decision.selectedMerchantId
+    });
+  }
 
-  trace.step("selection", "Product selection locked in", {
-    groqMeta: decision.meta,
-    selectedProductId: decision.selectedProductId,
-    selectedMerchantId: decision.selectedMerchantId
-  });
-
-  const selectedProduct = products.find(
+  const selectedProduct = rawProductRows.find(
     (product: any) => product.id === decision.selectedProductId && product.merchant_id === decision.selectedMerchantId
   );
   if (!selectedProduct) throw conflict("selected product missing from catalog");
@@ -246,6 +267,7 @@ export async function executeAgentRun(
   });
 
   const receipt = "receipt" in purchase ? purchase.receipt : undefined;
+  const decisionReason = purchase.attempt.reason ?? null;
   const runId = id("run");
   const createdAt = nowIso();
   const traceJson = asJson(trace.toJSON());
@@ -269,11 +291,12 @@ export async function executeAgentRun(
     created_at: createdAt
   });
 
-  trace.success("run", "Agent run completed", {
+  trace.success("run", purchase.attempt.decision === "approved" ? "Agent run completed" : "Agent run recorded with policy outcome", {
     runId,
     purchaseAttemptId: purchase.attempt.id,
     receiptId: receipt?.id ?? null,
-    finalDecision: purchase.attempt.decision
+    finalDecision: purchase.attempt.decision,
+    decisionReason
   });
 
   await writeAudit(repo, {
@@ -293,16 +316,29 @@ export async function executeAgentRun(
 
   const runRow = await repo.getById("agent_runs", runId, "agent run");
   return {
-    run: decodeRun(runRow),
+    run: await decodeRun(repo, runRow),
     purchase,
     trace: trace.toJSON()
   };
 }
 
-export function decodeRun(row: any) {
-  return {
+export async function decodeRun(repo: SupabaseRepository, row: any) {
+  const run = {
     ...row,
     candidateProducts: JSON.parse(row.candidate_products_json),
     trace: row.trace_json ? JSON.parse(row.trace_json) : null
   };
+  if (row.purchase_attempt_id) {
+    const attempt = await repo.maybeById<any>("purchase_attempts", row.purchase_attempt_id);
+    if (attempt) {
+      run.decision_reason = attempt.reason;
+      run.purchase_attempt = {
+        id: attempt.id,
+        decision: attempt.decision,
+        reason: attempt.reason,
+        approvalId: attempt.approval_id
+      };
+    }
+  }
+  return run;
 }

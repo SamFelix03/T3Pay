@@ -3,8 +3,9 @@
 import type { AnyRow, Product, RunTrace } from "@/lib/types";
 import { getVaultLabel } from "@/lib/asset-previews";
 import { agentRoleLabel } from "@/lib/agent-utils";
-import { formatRunDate, productLabel, runShortId } from "@/lib/run-utils";
+import { humanizePurchaseReason, purchaseOutcomeMessage } from "@/lib/purchase-outcome";
 import { money } from "@/lib/format";
+import { formatRunDate, productLabel, runShortId } from "@/lib/run-utils";
 import { StatusChip, FieldRow } from "@/components/ui/primitives";
 import { RunTracePanel } from "@/components/agents/RunTracePanel";
 
@@ -50,6 +51,16 @@ export function RunDetailView({
   const productName = productLabel(productId, products);
   const catalogProduct = products.find((product) => product.id === productId);
   const candidateProducts = (run.candidateProducts as AnyRow[] | undefined) ?? [];
+  const status = String(run.status ?? "unknown");
+  const purchaseAttempt = run.purchase_attempt as AnyRow | undefined;
+  const decisionReason = String(run.decision_reason ?? purchaseAttempt?.reason ?? "");
+  const outcomeMessage = purchaseOutcomeMessage({
+    status,
+    reason: decisionReason,
+    productName,
+    priceCents: catalogProduct?.price_cents
+  });
+  const showOutcomeBanner = status !== "approved";
 
   return (
     <div className="view-stack run-detail">
@@ -74,8 +85,15 @@ export function RunDetailView({
             <span className="run-detail-meta-pill">{Math.round(Number(run.confidence ?? 0) * 100)}% confidence</span>
           </div>
         </div>
-        <StatusChip value={String(run.status ?? "unknown")} />
+        <StatusChip value={status} />
       </section>
+
+      {showOutcomeBanner ? (
+        <section className={`run-detail-outcome surface-card run-detail-outcome--${status.replace(/_/g, "-")}`}>
+          <span className="section-label">Policy outcome</span>
+          <p className="run-detail-outcome-message">{outcomeMessage}</p>
+        </section>
+      ) : null}
 
       <section className="run-detail-stats surface-card">
         <div className="metric-grid">

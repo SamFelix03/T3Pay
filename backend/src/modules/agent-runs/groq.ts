@@ -48,8 +48,33 @@ export async function chooseProductWithGroq(
   if (!env.groqApiKey) {
     throw badRequest("GROQ_API_KEY is required for agent inference");
   }
-  if (input.candidates.length < 2) {
-    throw badRequest("agent inference requires at least two candidate products");
+  if (input.candidates.length === 0) {
+    throw badRequest("agent inference requires at least one candidate product");
+  }
+  if (input.candidates.length === 1) {
+    const only = input.candidates[0];
+    trace?.success("groq", "Single candidate product — skipping inference", {
+      selectedProductId: only.id,
+      selectedProductName: only.name
+    });
+    return {
+      selectedProductId: only.id,
+      selectedMerchantId: only.merchantId,
+      rationale: `Only one product matched the objective: ${only.name}.`,
+      confidence: 0.85,
+      meta: {
+        model: env.groqModel,
+        candidateCount: 1,
+        requestPayload: {
+          objective: input.objective,
+          useCase: input.useCase,
+          candidates: input.candidates
+        },
+        rawResponseContent: "",
+        usage: null,
+        finishReason: "single_candidate"
+      }
+    };
   }
 
   const requestPayload = {
@@ -91,7 +116,7 @@ export async function chooseProductWithGroq(
         {
           role: "system",
           content:
-            "You are the purchasing brain for VaultPay agents. Choose exactly one candidate product that best satisfies the user objective and policy. Return only JSON with selectedProductId, selectedMerchantId, rationale, confidence. Rationale must be concise and must not include hidden chain-of-thought."
+            "You are the purchasing brain for VaultPay agents. Choose exactly one candidate product that best satisfies the user objective. Candidates may exceed mandate limits — policy is enforced later. Return only JSON with selectedProductId, selectedMerchantId, rationale, confidence. Rationale must be concise and must not include hidden chain-of-thought."
         },
         {
           role: "user",

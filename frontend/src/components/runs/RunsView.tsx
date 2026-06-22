@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AnyRow, Product } from "@/lib/types";
 import { apiGet } from "@/lib/api";
 import { agentNameForRun, productLabel } from "@/lib/run-utils";
+import { humanizePurchaseReason } from "@/lib/purchase-outcome";
 import { timeAgo } from "@/lib/format";
 import { EmptyState, StatusChip } from "@/components/ui/primitives";
 
@@ -129,6 +130,7 @@ export function RunsView({ userId, agents, products, onOpenRun }: Props) {
                     Status{sortIndicator("status")}
                   </button>
                 </th>
+                <th>Outcome</th>
                 <th className="vp-table-align-right">
                   <button type="button" className="vp-table-sort" onClick={() => toggleSort("confidence")}>
                     Confidence{sortIndicator("confidence")}
@@ -154,6 +156,11 @@ export function RunsView({ userId, agents, products, onOpenRun }: Props) {
                   <td>{String(run.selected_merchant_id ?? "—").replace(/-/g, " ")}</td>
                   <td>
                     <StatusChip value={String(run.status ?? "unknown")} />
+                  </td>
+                  <td className="vp-table-truncate" title={humanizePurchaseReason(String(run.decision_reason ?? ""), String(run.status ?? ""))}>
+                    {String(run.status) === "approved"
+                      ? "—"
+                      : humanizePurchaseReason(String(run.decision_reason ?? ""), String(run.status ?? ""))}
                   </td>
                   <td className="vp-table-align-right vp-table-mono">
                     {Math.round(Number(run.confidence ?? 0) * 100)}%

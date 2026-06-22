@@ -16,6 +16,23 @@ export type AgentChatPurchaseSuccess = {
   merchantName?: string;
 };
 
+export type AgentChatPurchaseFailure = {
+  productName: string;
+  priceCents: number;
+  merchantName?: string;
+  status: string;
+  reason?: string | null;
+  message: string;
+};
+
+export type AgentChatPurchasePending = {
+  productName: string;
+  priceCents: number;
+  merchantName?: string;
+  approvalId?: string | null;
+  message: string;
+};
+
 export type AgentChatBlock = {
   role: "user" | "assistant";
   text?: string;
@@ -24,6 +41,8 @@ export type AgentChatBlock = {
   objective?: string | null;
   useCase?: UseCase | null;
   purchaseSuccess?: AgentChatPurchaseSuccess;
+  purchaseFailure?: AgentChatPurchaseFailure;
+  purchasePending?: AgentChatPurchasePending;
 };
 
 export type AgentChatResponse = {

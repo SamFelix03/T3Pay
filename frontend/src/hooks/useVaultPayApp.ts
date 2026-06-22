@@ -25,6 +25,7 @@ import type {
 
 import { MARKETPLACE_USE_CASES } from "@/lib/marketplace";
 import { effectivePaymentMethodKinds, useCaseForRole } from "@/lib/agent-utils";
+import { purchaseOutcomeMessage } from "@/lib/purchase-outcome";
 import type { AgentChatBlock, AgentChatProposal, AgentChatResponse } from "@/lib/agent-chat-types";
 import { loadAgentChat, saveAgentChat } from "@/lib/agent-chat-types";
 
@@ -486,7 +487,12 @@ export function useVaultPayApp() {
     setRunTrace((result.run.trace as RunTrace | null) ?? null);
   }
 
-  async function runSelectedAgent(overrides?: { objective?: string; useCase?: UseCase }) {
+  async function runSelectedAgent(overrides?: {
+    objective?: string;
+    useCase?: UseCase;
+    selectedProductId?: string;
+    selectedMerchantId?: string;
+  }) {
     if (!selectedAgent || !agentMandate || !selectedPaymentMethod) {
       toast.error("Agent needs a mandate and payment method.");
       return null;
@@ -498,19 +504,31 @@ export function useVaultPayApp() {
     setSelectedRunId(null);
     const toastId = toast.loading("Running purchase workflow through T3N policy.");
     try {
-      const result = await apiPost<{ run: AnyRow; purchase: AnyRow; trace: RunTrace }>("/api/agent-runs", {
-        agentId: selectedAgent.id,
-        mandateId: agentMandate.id,
-        paymentMethodId: selectedPaymentMethod.id,
-        objective: objectiveText,
-        useCase: useCaseValue,
-        candidateLimit: 3
-      });
-      const purchase = result.purchase as AnyRow | undefined;
+      const result = await apiPost<{ run: AnyRow; purchase: { attempt?: AnyRow; receipt?: AnyRow }; trace: RunTrace }>(
+        "/api/agent-runs",
+        {
+          agentId: selectedAgent.id,
+          mandateId: agentMandate.id,
+          paymentMethodId: selectedPaymentMethod.id,
+          objective: objectiveText,
+          useCase: useCaseValue,
+          candidateLimit: 20,
+          selectedProductId: overrides?.selectedProductId,
+          selectedMerchantId: overrides?.selectedMerchantId
+        }
+      );
+      const purchase = result.purchase;
       setReceipt((purchase?.receipt as AnyRow | undefined) ?? null);
       setRunTrace(result.trace ?? (result.run.trace as RunTrace | null) ?? null);
       setSelectedRunId(String(result.run.id));
-      toast.success(`Run complete · ${result.run.selected_product_id}`, toastId);
+      const status = String(result.run.status ?? purchase?.attempt?.decision ?? "");
+      if (status === "approved") {
+        toast.success(`Purchase approved · ${result.run.selected_product_id}`, toastId);
+      } else if (status === "pending_approval") {
+        toast.success("Purchase needs your approval", toastId);
+      } else {
+        toast.error(`Purchase blocked · ${purchase?.attempt?.reason ?? status}`, toastId);
+      }
       await refresh();
       return result;
     } catch (error) {
@@ -519,6 +537,14 @@ export function useVaultPayApp() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function chatBlockSummary(block: AgentChatBlock): string {
+    if (block.text) return block.text;
+    if (block.purchaseSuccess) return `Order placed for ${block.purchaseSuccess.productName}`;
+    if (block.purchaseFailure) return block.purchaseFailure.message;
+    if (block.purchasePending) return block.purchasePending.message;
+    return "";
   }
 
   async function sendAgentChat() {
@@ -534,7 +560,7 @@ export function useVaultPayApp() {
         agentId: String(selectedAgent.id),
         messages: history.map((block) => ({
           role: block.role,
-          content: block.text ?? (block.purchaseSuccess ? `Order placed for ${block.purchaseSuccess.productName}` : "")
+          content: chatBlockSummary(block)
         }))
       });
       setAgentChat([
@@ -562,18 +588,26 @@ export function useVaultPayApp() {
 
   async function runFromChat(block: AgentChatBlock, proposal?: AgentChatProposal) {
     const objectiveText = proposal
-      ? `${block.objective ?? objective} — prefer ${proposal.name}`
+      ? `${block.objective ?? objective} — buy ${proposal.name}`
       : block.objective ?? objective;
-    const useCaseValue = block.useCase ?? runUseCase;
-    const result = await runSelectedAgent({ objective: objectiveText, useCase: useCaseValue });
+    const useCaseValue = (proposal?.category as UseCase | undefined) ?? block.useCase ?? runUseCase;
+    const result = await runSelectedAgent({
+      objective: objectiveText,
+      useCase: useCaseValue,
+      selectedProductId: proposal?.id,
+      selectedMerchantId: proposal?.merchantId
+    });
     if (!result) return;
     const run = result.run;
-    const status = String(run.status ?? "");
-    const productId = String(run.selected_product_id ?? "");
+    const attempt = result.purchase?.attempt;
+    const status = String(run.status ?? attempt?.decision ?? "");
+    const reason = String(attempt?.reason ?? run.decision_reason ?? "");
+    const productId = String(run.selected_product_id ?? proposal?.id ?? "");
     const catalogProduct = products.find((item) => item.id === productId);
     const productName = proposal?.name ?? catalogProduct?.name ?? productId.replace(/^prd_/, "").replace(/_/g, " ");
-    const priceCents = proposal?.priceCents ?? catalogProduct?.price_cents ?? 0;
+    const priceCents = Number(proposal?.priceCents ?? catalogProduct?.price_cents ?? 0);
     const merchantName = proposal?.merchantName ?? catalogProduct?.merchant_name;
+    const message = purchaseOutcomeMessage({ status, reason, productName, priceCents });
 
     if (status === "approved") {
       setAgentChat((current) => [
@@ -586,14 +620,35 @@ export function useVaultPayApp() {
       return;
     }
 
-    const rationale = String(run.rationale ?? "");
+    if (status === "pending_approval") {
+      setAgentChat((current) => [
+        ...current,
+        {
+          role: "assistant",
+          purchasePending: {
+            productName,
+            priceCents,
+            merchantName,
+            approvalId: attempt?.approvalId ? String(attempt.approvalId) : null,
+            message
+          }
+        }
+      ]);
+      return;
+    }
+
     setAgentChat((current) => [
       ...current,
       {
         role: "assistant",
-        text: rationale
-          ? `I couldn't complete that purchase (${status}). ${rationale}`
-          : `I couldn't complete that purchase (${status}).`
+        purchaseFailure: {
+          productName,
+          priceCents,
+          merchantName,
+          status,
+          reason,
+          message
+        }
       }
     ]);
   }

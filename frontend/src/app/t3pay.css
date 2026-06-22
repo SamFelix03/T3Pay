@@ -31,10 +31,17 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
   color: var(--vp-fg);
   background: var(--vp-bg);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100svh;
 }
 
 button,
@@ -85,7 +92,8 @@ button {
 /* ── Login ─────────────────────────────────────────────────────────────── */
 
 .login-shell {
-  min-height: 100vh;
+  flex: 1;
+  min-height: 100svh;
   display: grid;
   place-items: center;
   padding: 24px;
@@ -308,27 +316,40 @@ textarea:focus {
 
 /* ── App shell ─────────────────────────────────────────────────────────── */
 
+.app-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
 .app-shell {
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100svh;
   background:
     radial-gradient(circle at 50% -10%, oklch(0.58 0.16 255 / 0.14), transparent 38%),
     var(--vp-bg);
 }
 
 .app-navbar {
-  position: sticky;
-  top: 0;
+  display: block;
+  flex-shrink: 0;
   z-index: 40;
-  padding: 16px var(--nav-gutter) 0;
+  padding: 16px 0 0;
   background: transparent;
 }
 
 .navbar-inner {
+  width: 100%;
   height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 0 var(--nav-gutter);
+  background: transparent;
+  transition: all 0.3s ease;
 }
 
 .navbar-left,
@@ -444,7 +465,12 @@ textarea:focus {
 }
 
 .app-main {
+  flex: 1;
+  min-height: 0;
+  overflow-x: clip;
+  overflow-y: auto;
   max-width: var(--page-max);
+  width: 100%;
   margin: 0 auto;
   padding: 24px var(--page-gutter) 48px;
 }
@@ -1632,6 +1658,12 @@ textarea:focus {
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
 
+@media (min-width: 768px) {
+  .app-navbar {
+    padding-top: 24px;
+  }
+}
+
 @media (max-width: 960px) {
   .navbar-inner {
     flex-direction: column;
@@ -2779,6 +2811,31 @@ button.vault-grid-card {
   font-size: 0.875rem;
 }
 
+.agent-chat-example-prompts {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 520px);
+}
+
+.agent-chat-example-prompt {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  color: var(--vp-text);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.agent-chat-example-prompt:hover {
+  border-color: var(--vp-blue);
+  background: color-mix(in srgb, var(--vp-blue) 8%, var(--vp-surface));
+}
+
 .agent-chat-message {
   display: flex;
   flex-direction: column;
@@ -2941,6 +2998,72 @@ button.vault-grid-card {
 }
 
 .agent-chat-purchase-success-merchant {
+  font-size: 0.75rem;
+  color: var(--vp-subtle);
+}
+
+.agent-chat-purchase-failure,
+.agent-chat-purchase-pending {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  width: min(100%, 520px);
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.agent-chat-purchase-failure {
+  border: 1px solid color-mix(in oklch, var(--vp-danger) 35%, var(--vp-line));
+  background: color-mix(in oklch, var(--vp-danger) 10%, var(--vp-surface));
+}
+
+.agent-chat-purchase-pending {
+  border: 1px solid color-mix(in oklch, var(--vp-warning) 35%, var(--vp-line));
+  background: color-mix(in oklch, var(--vp-warning) 10%, var(--vp-surface));
+}
+
+.agent-chat-purchase-failure-icon,
+.agent-chat-purchase-pending-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+}
+
+.agent-chat-purchase-failure-icon {
+  background: color-mix(in oklch, var(--vp-danger) 18%, var(--vp-card));
+  color: var(--vp-danger);
+}
+
+.agent-chat-purchase-pending-icon {
+  background: color-mix(in oklch, var(--vp-warning) 18%, var(--vp-card));
+  color: var(--vp-warning);
+}
+
+.agent-chat-purchase-failure-copy,
+.agent-chat-purchase-pending-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.agent-chat-purchase-failure-copy strong,
+.agent-chat-purchase-pending-copy strong {
+  font-size: 0.9375rem;
+  color: var(--vp-fg);
+}
+
+.agent-chat-purchase-failure-copy p,
+.agent-chat-purchase-pending-copy p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--vp-muted);
+}
+
+.agent-chat-purchase-failure-merchant,
+.agent-chat-purchase-pending-merchant {
   font-size: 0.75rem;
   color: var(--vp-subtle);
 }
@@ -3185,6 +3308,24 @@ button.vault-grid-card {
   color: var(--vp-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.run-detail-outcome-message {
+  margin: 10px 0 0;
+  color: var(--vp-fg);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.run-detail-outcome--rejected,
+.run-detail-outcome--revoked {
+  border-color: color-mix(in oklch, var(--vp-danger) 35%, var(--vp-line));
+  background: color-mix(in oklch, var(--vp-danger) 8%, var(--vp-card));
+}
+
+.run-detail-outcome--pending-approval {
+  border-color: color-mix(in oklch, var(--vp-warning) 35%, var(--vp-line));
+  background: color-mix(in oklch, var(--vp-warning) 8%, var(--vp-card));
 }
 
 .metric-grid {
