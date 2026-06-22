@@ -142,35 +142,38 @@ export function RunDetailView({
       </div>
 
       {candidateProducts.length ? (
-        <section className="surface-card">
+        <section className="run-detail-candidates">
           <span className="section-label">Candidate products</span>
-          <div className="vp-table-scroll">
-            <table className="vp-table vp-table--compact">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Merchant</th>
-                  <th className="vp-table-align-right">Price</th>
-                  <th>Selected</th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidateProducts.map((candidate) => {
-                  const id = String(candidate.id ?? "");
-                  const selected = id === productId;
-                  return (
-                    <tr key={id} className={selected ? "vp-table-row vp-table-row--active" : "vp-table-row"}>
-                      <td className="vp-table-primary">{String(candidate.name ?? id)}</td>
-                      <td>{String(candidate.merchant_name ?? candidate.merchantId ?? "—")}</td>
-                      <td className="vp-table-align-right vp-table-mono">
-                        {candidate.price_cents != null ? money(Number(candidate.price_cents)) : "—"}
-                      </td>
-                      <td>{selected ? "Yes" : "—"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="vp-table-card">
+            <div className="vp-table-scroll">
+              <table className="vp-table vp-table--compact">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Merchant</th>
+                    <th>Selected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidateProducts.map((candidate) => {
+                    const id = String(candidate.id ?? "");
+                    const selected = id === productId;
+                    const merchant =
+                      String(candidate.merchantName ?? candidate.merchant_name ?? candidate.merchantId ?? "—").replace(
+                        /-/g,
+                        " "
+                      );
+                    return (
+                      <tr key={id} className={selected ? "vp-table-row vp-table-row--active" : "vp-table-row"}>
+                        <td className="vp-table-primary">{String(candidate.name ?? productLabel(id, products))}</td>
+                        <td className="vp-table-muted">{merchant}</td>
+                        <td>{selected ? <StatusChip value="Selected" /> : null}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       ) : null}

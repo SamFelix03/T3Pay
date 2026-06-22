@@ -940,6 +940,11 @@ textarea:focus {
   color: oklch(0.78 0.14 145);
 }
 
+.status-chip.selected {
+  background: color-mix(in oklch, var(--vp-blue) 18%, var(--vp-card));
+  color: var(--vp-blue-ink);
+}
+
 .status-chip.no_grant,
 .status-chip.no-grant {
   background: var(--vp-surface);
@@ -3370,6 +3375,15 @@ button.vault-grid-card {
 .run-detail-actions {
   display: flex;
   justify-content: flex-start;
+}
+
+.run-detail-candidates {
+  display: grid;
+  gap: 10px;
+}
+
+.run-detail-candidates .vp-table-row {
+  cursor: default;
 }
 
 @media (max-width: 900px) {
