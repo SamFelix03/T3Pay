@@ -72,38 +72,49 @@ Defined in [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L
 
 ## How to demo
 
-### A. Normal route (happy path)
+Walk through the live app at **[t3pay.vercel.app](https://t3pay.vercel.app)**. Add a screenshot above each step.
 
-**Goal:** Show private vault → scoped agent → in-policy purchase → receipt → agent never saw credentials.
+### 1. Sign in
 
-| Step | Action | What to show |
-|---|---|---|
-| 1 | Open [The Live App](https://t3pay.vercel.app), sign up / log in | Empty dashboard | [`frontend/src/components/onboarding/LoginGate.tsx`](frontend/src/components/onboarding/LoginGate.tsx) |
-| 2 | Accept demo welcome; add **Card** and **Wallet** from the nav | Balances + sealed credential UX (alias/last-four only) | [`frontend/src/hooks/useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts#L300-L347) |
-| 3 | **Vaults** → create a vault; attach existing card/wallet | Vault isolates funding without duplicating instruments | [`frontend/src/components/vault/CreateVaultModal.tsx`](frontend/src/components/vault/CreateVaultModal.tsx) |
-| 4 | **Agents** → create *Shopping Agent* with budget `$500`, per-purchase `$150`, approval `$100` | Separate T3N agent DID + ADK grant created | [`frontend/src/components/agents/CreateAgentModal.tsx`](frontend/src/components/agents/CreateAgentModal.tsx) → [`backend/src/modules/mandates/routes.ts`](backend/src/modules/mandates/routes.ts#L28-L100) |
-| 5 | Open agent workspace → chat: *"Find a USB-C charger under $50"* | Proposals from full catalog; pick one | [`backend/src/modules/agent-chat/service.ts`](backend/src/modules/agent-chat/service.ts) |
-| 6 | Click proposal or **Run with best match** | T3N `validate-and-pay` → approved → green success card | [`frontend/src/hooks/useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts#L563-L627) |
-| 7 | Check **Runs** detail + **Receipts** | Trace, mandate hash, deterministic receipt verify | [`frontend/src/components/runs/RunDetailView.tsx`](frontend/src/components/runs/RunDetailView.tsx) |
-| 8 | **Approvals** (optional) | Ask for *Premium Resort Package* or hotel night → pending → approve | [`backend/src/modules/approvals/routes.ts`](backend/src/modules/approvals/routes.ts) |
+<!-- screenshot: login / welcome -->
 
-**One-shot API demo** (no UI): `POST /api/demo/start` seeds user, vault, agent, mandate, card purchase, stablecoin purchase, and approval scenario — [`backend/src/modules/demo/routes.ts`](backend/src/modules/demo/routes.ts#L15-L198).
+Create an account or sign in to open your dashboard.
 
----
+### 2. Create your first vault
 
-### B. Payment failure route (policy block)
+<!-- screenshot: vault creation -->
 
-**Goal:** Agent sees the full catalog and *can try* an out-of-limit purchase; T3N rejects it; UI shows a structured failure.
+Add a demo card or wallet and create a vault to fund your agents.
 
-| Step | Action | Expected outcome |
-|---|---|---|
-| 1 | Use an agent with **$200** total budget and **$150** per-purchase limit (default create-agent values are `$500` / `$150` — lower budget in the modal for a sharper demo) | Mandate sealed on T3N | [`backend/src/modules/mandates/routes.ts`](backend/src/modules/mandates/routes.ts#L33-L47) |
-| 2 | Agent workspace chat: *"Buy the Developer Laptop"* (`prd_laptop`, **$260**) | Proposal card **is shown** (unfiltered catalog) | [`backend/src/modules/catalog/products.ts`](backend/src/modules/catalog/products.ts) |
-| 3 | Click the laptop proposal | Run executes; T3N returns `rejected` / `budget_exceeded` or `per_purchase_limit_exceeded` | [`contracts/vaultpay/src/vaultpay.rs`](contracts/vaultpay/src/vaultpay.rs#L146-L151) |
-| 4 | Chat shows red **Purchase blocked** card with plain-English reason | No receipt; budget not deducted | [`frontend/src/lib/purchase-outcome.ts`](frontend/src/lib/purchase-outcome.ts) |
-| 5 | Open **Runs** → failed run | Policy outcome banner + `decision_reason` | [`frontend/src/components/runs/RunDetailView.tsx`](frontend/src/components/runs/RunDetailView.tsx#L91-L96) |
+### 3. Create your first agent
 
-Policy evaluation: [`contracts/vaultpay/src/vaultpay.rs#L110-L163`](contracts/vaultpay/src/vaultpay.rs#L110-L163).
+<!-- screenshot: create agent -->
+
+Pick a role, set a spending budget and limits, and launch your agent.
+
+### 4. Ask the agent to buy something
+
+<!-- screenshot: agent chat -->
+
+Open the agent workspace and ask it to find and purchase an item — e.g. *"Find a USB-C charger under $50."*
+
+### 5. Purchase succeeds — review the proof
+
+<!-- screenshot: success + runs / receipts -->
+
+When the item is within your rules, the purchase completes. Check **Runs**, **Receipts**, and activity for the full audit trail.
+
+### 6. Over-budget purchases are blocked
+
+<!-- screenshot: purchase blocked -->
+
+Try something above your budget or per-purchase limit (e.g. a $260 laptop on a $150 cap). The agent can still propose it — T3Pay rejects the checkout and shows why.
+
+### 7. Revoked agents lose access
+
+<!-- screenshot: revoke + blocked purchase -->
+
+Revoke the agent from your dashboard, then try another purchase. Access is denied immediately — no silent spending after you pull the plug.
 
 ---
 
