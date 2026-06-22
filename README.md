@@ -7,9 +7,9 @@
 
 </div>
 
-**T3Pay** is a private agent wallet and spending governor on [Terminal 3 (T3N)](https://terminal3.io) — the gap between *asking* an AI to buy something and actually letting it checkout. Give an agent real **card or stablecoin** budget, cap it to merchants and categories you choose, and let it run: it can **place orders, hit limits, and route approvals - without ever seeing your credentials**. Your rules live in sealed mandates, enforcement runs in the TEE, and every attempt leaves an auditable trail you can prove.
+**T3Pay** is a platform to **create and run personal shopping agents** — powered by [Terminal 3 (T3N)](https://terminal3.io). Spin up a *Shopping Agent* (or Travel, Subscription, and more), fund it from your vault, set a budget and rules, then chat with it to find and buy things for real. The gap it closes: between *asking* an AI to purchase something and actually letting it checkout. Agents get **card or stablecoin** spending power capped to your merchants and categories — they **place orders, hit limits, and route approvals without ever seeing your credentials**. Your rules live in sealed mandates, enforcement runs in the TEE, and every attempt leaves an auditable trail you can prove.
 
-Check out how Terminal 3's Agent Dev Kit and T3N Powers T3Pay at [this section](#how-terminal-3-powers-t3pay).
+Check out how Terminal 3's Agent Dev Kit and T3N power your agents at [this section](#how-terminal-3-powers-t3pay).
 
 ---
 
@@ -72,7 +72,7 @@ Defined in [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L
 
 ## How to demo
 
-Walk through the live app at **[t3pay.vercel.app](https://t3pay.vercel.app)**. Add a screenshot above each step.
+Walk through the live app at **[t3pay.vercel.app](https://t3pay.vercel.app)** — create a vault, launch a shopping agent, and let it buy for you.
 
 ### 1. Sign in
 
@@ -120,7 +120,7 @@ Revoke the agent from your dashboard, then try another purchase. Access is denie
 
 ## The problem
 
-Agentic commerce has a **trust gap**. People want AI agents to shop, book, and renew on their behalf—but they do not want those agents holding raw card numbers, wallet keys, or unlimited spending authority.
+People want to **create AI agents that buy stuff for them** — but agentic commerce has a **trust gap**. You do not want those agents holding raw card numbers, wallet keys, or unlimited spending authority while they browse, compare, and checkout on your behalf.
 
 ### What goes wrong today
 
@@ -140,17 +140,29 @@ Agentic commerce has a **trust gap**. People want AI agents to shop, book, and r
 
 ## Introduction
 
-T3Pay combines **private payment execution** with **personal agent governance**:
+T3Pay is a **platform for creating and using governed agents** — starting with **Shopping Agents** that search a product catalog, propose purchases in chat, and checkout within your rules. Under the hood it combines **private payment execution** with **personal agent governance** on T3N:
 
-- **User** — owns vaults, mandates, and revocation; authenticates to T3N with the tenant DID.
-- **Agent** — separate T3N DID per agent; receives scoped delegation, never user credentials.
-- **TEE / T3N** — stores secrets, evaluates policy, optionally injects credentials at the merchant boundary.
+- **You** — create vaults, spin up agents, set mandates, monitor every run, and revoke access in one click.
+- **Your agent** — separate T3N DID per agent; scoped delegation to shop and pay, never your credentials.
+- **TEE / T3N** — seals secrets, enforces policy at checkout, and records an auditable outcome for every attempt.
+
+### Agent types you can create today
+
+| Role | What it does |
+|---|---|
+| **Shopping** | Browse catalog, propose products, purchase within budget |
+| **Travel** | Book trips within merchant and spend limits |
+| **Subscription** | Manage recurring purchases |
+| **Research-only** | Search and recommend — no checkout |
+| **Custom** | Your own scope and limits |
+
+Roles are configured in [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L25). Each agent gets its own workspace, chat, and spending mandate.
 
 ### Core user flow
 
 1. Create a **private vault** with demo card and/or USDC wallet — [`backend/src/modules/vaults/routes.ts`](backend/src/modules/vaults/routes.ts)
-2. Create or link a **T3N-native agent** — [`backend/src/modules/agents/routes.ts`](backend/src/modules/agents/routes.ts#L31-L65)
-3. Assign a **role** (Shopping, Travel, Subscription, Research-only, Custom) — [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L25)
+2. **Create your first agent** (e.g. Shopping Agent) — [`backend/src/modules/agents/routes.ts`](backend/src/modules/agents/routes.ts#L31-L65)
+3. Assign a **role** and spending limits — [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L25)
 4. Seal a **spending mandate** (budget, merchants, categories, limits, expiry) — [`backend/src/modules/mandates/routes.ts`](backend/src/modules/mandates/routes.ts)
 5. Agent requests purchase via chat or run — [`backend/src/modules/agent-chat/`](backend/src/modules/agent-chat/) + [`backend/src/modules/agent-runs/`](backend/src/modules/agent-runs/)
 6. TEE validates and executes (or rejects / pending) — [`backend/src/modules/t3n/gateway.ts`](backend/src/modules/t3n/gateway.ts)
@@ -386,10 +398,10 @@ Scoped grant binds: **agent DID** → **contract tail** → **`validate-and-pay`
 
 ## Conclusion
 
-T3Pay is not just a payment demo. It is the **missing personal trust layer for agentic commerce**.
+T3Pay is a **platform where anyone can create personal agents and let them spend safely** — not just a payment demo. It is the **missing personal trust layer for agentic commerce**.
 
-- The **user** gets privacy, spending control, monitoring, and one-click revocation.
-- The **agent** gets enough delegated authority to be useful—without credentials.
+- **You** create agents, set budgets, chat to buy, and revoke access instantly.
+- **Your agents** get enough delegated authority to be useful — without credentials.
 - **Merchants** get a verifiable agent identity and auditable receipt.
 - **Terminal 3** features are load-bearing:
 
@@ -405,4 +417,4 @@ T3Pay is not just a payment demo. It is the **missing personal trust layer for a
 | **sign-sd-jwt-vc** | Verifiable receipts when testnet supports it; demo hash today |
 | **outbox** | Push notifications when available; in-app polling today |
 
-This is private payments plus personal agent governance—demo-able end to end on **T3N testnet** with real contracts, storage, and delegation, and a local mock merchant only where no official Terminal 3 test merchant exists.
+This is a **create-your-agent, set-your-rules, let-it-shop** platform — demo-able end to end on **T3N testnet** with real contracts, storage, and delegation, and a local mock merchant only where no official Terminal 3 test merchant exists.
