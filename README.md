@@ -30,9 +30,9 @@ Check out how Terminal 3's Agent Dev Kit and T3N Powers T3Pay at [this section](
 
 | Resource | Link |
 |---|---|
-| **Live app** | *Coming soon* |
-| **Demo video** | *Coming soon* |
-| **Pitch deck** | *Coming soon* |
+| **Live app** | [View Here](https://t3pay.vercel.app) |
+| **Demo video** | [View Here](https://www.youtube.com/watch?v=ssX6L3SSbLY) |
+| **Pitch deck** | [View Here](https://canva.link/1w5mzd1ehprryvv) |
 | **T3N / ADK bug summary** | [`issues/bug-summary.md`](issues/bug-summary.md) |
 
 ## Bug reports
@@ -78,7 +78,7 @@ Defined in [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L
 
 | Step | Action | What to show |
 |---|---|---|
-| 1 | Open `http://localhost:3000`, sign up / log in | Empty dashboard | [`frontend/src/components/onboarding/LoginGate.tsx`](frontend/src/components/onboarding/LoginGate.tsx) |
+| 1 | Open [The Live App](https://t3pay.vercel.app), sign up / log in | Empty dashboard | [`frontend/src/components/onboarding/LoginGate.tsx`](frontend/src/components/onboarding/LoginGate.tsx) |
 | 2 | Accept demo welcome; add **Card** and **Wallet** from the nav | Balances + sealed credential UX (alias/last-four only) | [`frontend/src/hooks/useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts#L300-L347) |
 | 3 | **Vaults** → create a vault; attach existing card/wallet | Vault isolates funding without duplicating instruments | [`frontend/src/components/vault/CreateVaultModal.tsx`](frontend/src/components/vault/CreateVaultModal.tsx) |
 | 4 | **Agents** → create *Shopping Agent* with budget `$500`, per-purchase `$150`, approval `$100` | Separate T3N agent DID + ADK grant created | [`frontend/src/components/agents/CreateAgentModal.tsx`](frontend/src/components/agents/CreateAgentModal.tsx) → [`backend/src/modules/mandates/routes.ts`](backend/src/modules/mandates/routes.ts#L28-L100) |
