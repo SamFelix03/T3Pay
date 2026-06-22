@@ -1,0 +1,110 @@
+"use client";
+
+import { useEffect } from "react";
+import type { AgentChatBlock, AgentChatProposal } from "@/lib/agent-chat-types";
+import { AgentChatComposer, AgentChatTypingIndicator, AgentChatWindowChrome } from "@/components/agents/chat/AgentChatChrome";
+import { AgentChatMessage } from "@/components/agents/chat/AgentChatMessage";
+import { useStickToBottom } from "@/hooks/useStickToBottom";
+
+type Props = {
+  agentName: string;
+  agentRole: string;
+  roleLabel: string;
+  vaultLabel: string;
+  grantStatus: string;
+  chat: AgentChatBlock[];
+  draft: string;
+  loading: boolean;
+  busy: boolean;
+  canChat: boolean;
+  onDraftChange: (value: string) => void;
+  onSend: () => void;
+  onRun: (block: AgentChatBlock, proposal?: AgentChatProposal) => void;
+  onExample: (text: string) => void;
+};
+
+const EXAMPLES: Record<string, string> = {
+  shopping_agent: "Find a useful electronics purchase under my budget.",
+  travel_agent: "Book a hotel night within my approval threshold.",
+  subscription_agent: "Put together a weekly grocery basket under budget.",
+  research_only: "What merchants and categories am I allowed to research?",
+  custom_agent: "What can you help me buy with my current mandate?"
+};
+
+export function AgentChatPanel({
+  agentName,
+  agentRole,
+  roleLabel,
+  vaultLabel,
+  grantStatus,
+  chat,
+  draft,
+  loading,
+  busy,
+  canChat,
+  onDraftChange,
+  onSend,
+  onRun,
+  onExample
+}: Props) {
+  const { viewportRef, followOutput, enableStickToBottom } = useStickToBottom<HTMLDivElement>();
+  const canSend = Boolean(draft.trim()) && !loading && !busy && canChat;
+  const showTyping = loading;
+  const isEmpty = chat.length === 0;
+  const example = EXAMPLES[agentRole] ?? EXAMPLES.custom_agent;
+
+  useEffect(() => {
+    followOutput();
+  }, [chat, loading, showTyping, followOutput]);
+
+  function handleSend() {
+    enableStickToBottom("smooth");
+    onSend();
+  }
+
+  return (
+    <AgentChatWindowChrome>
+      <header className="agent-chat-header">
+        <div>
+          <span className="section-label">Agent chat</span>
+          <h2 className="agent-chat-title">{agentName}</h2>
+          <p className="agent-chat-subtitle">Ask for help within this agent&apos;s role and mandate.</p>
+        </div>
+        <div className="agent-chat-header-meta">
+          <span className="agent-chat-meta-pill">{roleLabel}</span>
+          <span className="agent-chat-meta-pill">{vaultLabel}</span>
+          <span className="agent-chat-meta-pill">{grantStatus}</span>
+        </div>
+      </header>
+
+      <div className="agent-chat-viewport" ref={viewportRef}>
+        <div className="agent-chat-thread">
+          {isEmpty ? (
+            <div className="agent-chat-empty">
+              <p>Tell this agent what you need. It will stay within its role and spending mandate.</p>
+              <button type="button" className="ghost-btn" onClick={() => onExample(example)}>
+                Try an example
+              </button>
+            </div>
+          ) : null}
+
+          {chat.map((block, index) => (
+            <AgentChatMessage key={`${block.role}-${index}`} block={block} busy={busy} onRun={onRun} />
+          ))}
+
+          {showTyping ? <AgentChatTypingIndicator /> : null}
+        </div>
+      </div>
+
+      <AgentChatComposer
+        value={draft}
+        onChange={onDraftChange}
+        onSend={handleSend}
+        disabled={!canChat}
+        loading={loading}
+        canSend={canSend}
+        placeholder={canChat ? "Message your agent…" : "Agent needs an active mandate and vault funding."}
+      />
+    </AgentChatWindowChrome>
+  );
+}

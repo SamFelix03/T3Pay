@@ -10,8 +10,8 @@ import {
 } from "@/lib/agent-utils";
 import { money, timeAgo } from "@/lib/format";
 import { StatusChip } from "@/components/ui/primitives";
-import { SelectMenu } from "@/components/ui/SelectMenu";
 import { RunTracePanel } from "@/components/agents/RunTracePanel";
+import { AgentChatPanel } from "@/components/agents/chat/AgentChatPanel";
 import { CreditCard, Wallet } from "lucide-react";
 import type { AppView } from "@/lib/types";
 
@@ -21,19 +21,19 @@ type Props = Pick<
   | "agentMandate"
   | "agentActivity"
   | "agentRuns"
-  | "candidates"
-  | "paymentChoice"
-  | "setPaymentChoice"
-  | "agentAllowedPaymentMethods"
-  | "objective"
-  | "setObjective"
-  | "runSelectedAgent"
   | "busy"
   | "setView"
   | "runTrace"
   | "selectedRunId"
   | "loadRunTrace"
   | "paymentMethods"
+  | "agentAllowedPaymentMethods"
+  | "agentChat"
+  | "chatDraft"
+  | "setChatDraft"
+  | "chatLoading"
+  | "sendAgentChat"
+  | "runFromChat"
 >;
 
 export function AgentWorkspaceView({
@@ -41,19 +41,19 @@ export function AgentWorkspaceView({
   agentMandate,
   agentActivity,
   agentRuns,
-  candidates,
-  paymentChoice,
-  setPaymentChoice,
-  agentAllowedPaymentMethods,
-  objective,
-  setObjective,
-  runSelectedAgent,
   busy,
   setView,
   runTrace,
   selectedRunId,
   loadRunTrace,
-  paymentMethods
+  paymentMethods,
+  agentAllowedPaymentMethods,
+  agentChat,
+  chatDraft,
+  setChatDraft,
+  chatLoading,
+  sendAgentChat,
+  runFromChat
 }: Props) {
   function navigate(view: AppView) {
     setView(view);
@@ -74,12 +74,13 @@ export function AgentWorkspaceView({
   const vaultLabel = vaultId ? getVaultLabel(vaultId) : "Not assigned";
   const grantStatus = grantStatusLabel(selectedAgent);
   const roleLabel = agentRoleLabel(String(selectedAgent.role ?? "custom_agent"));
+  const agentRole = String(selectedAgent.role ?? "custom_agent");
   const budgetCents = Number(agentMandate?.budget_remaining_cents ?? 0);
   const paymentKinds = effectivePaymentMethodKinds(
     selectedAgent,
     paymentMethods.filter((method) => String(method.vault_id) === vaultId)
   );
-  const showPaymentPicker = agentAllowedPaymentMethods.length > 1;
+  const canChat = Boolean(agentMandate && vaultId && agentAllowedPaymentMethods.length);
 
   return (
     <div className="view-stack agent-workspace">
@@ -122,109 +123,67 @@ export function AgentWorkspaceView({
         </div>
       </section>
 
-      <section className="surface-card agent-run-card">
-        <div className="agent-run-head">
-          <span className="section-label">Run workflow</span>
-          <h2 className="agent-run-title">Run Workflow</h2>
-          <div className="agent-run-meta">
-            <span className="agent-run-meta-item">
-              <em>Role</em>
-              {roleLabel}
-            </span>
-            <span className="agent-run-meta-item">
-              <em>Vault</em>
-              {vaultLabel}
-            </span>
-            <span className="agent-run-meta-item">
-              <em>Status</em>
-              <StatusChip value={grantStatus} />
-            </span>
-          </div>
-        </div>
+      <div className="agent-workspace-chat-layout">
+        <AgentChatPanel
+          agentName={String(selectedAgent.name)}
+          agentRole={agentRole}
+          roleLabel={roleLabel}
+          vaultLabel={vaultLabel}
+          grantStatus={grantStatus}
+          chat={agentChat}
+          draft={chatDraft}
+          loading={chatLoading}
+          busy={busy}
+          canChat={canChat}
+          onDraftChange={setChatDraft}
+          onSend={sendAgentChat}
+          onRun={runFromChat}
+          onExample={setChatDraft}
+        />
 
-        <div className="agent-run-composer">
-          {showPaymentPicker ? (
-            <label className="agent-run-payment-field">
-              <span>Pay with</span>
-              <SelectMenu
-                value={paymentChoice}
-                options={agentAllowedPaymentMethods.map((kind) => ({
-                  value: kind,
-                  label: paymentMethodLabel(kind)
-                }))}
-                onChange={(value) => setPaymentChoice(value as typeof paymentChoice)}
-              />
-            </label>
-          ) : null}
+        <aside className="agent-workspace-side">
+          <RunTracePanel trace={runTrace} title="Latest run trace" />
 
-          <label className="agent-run-instruction">
-            <span>Enter Your Instruction</span>
-            <textarea value={objective} onChange={(event) => setObjective(event.target.value)} rows={4} />
-          </label>
-
-          {candidates.length ? (
-            <div className="candidate-row agent-run-candidates">
-              {candidates.map((product) => (
-                <span key={product.id}>
-                  {product.name} · {money(product.price_cents)}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="agent-run-actions">
-            <button
-              type="button"
-              className="primary-btn"
-              onClick={runSelectedAgent}
-              disabled={busy || !agentMandate || !vaultId || !agentAllowedPaymentMethods.length}
-            >
-              Start agent
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <RunTracePanel trace={runTrace} title="Latest run trace" />
-
-      <section className="surface-card">
-        <span className="section-label">Recent runs</span>
-        {agentRuns.length ? (
-          <div className="data-table">
-            {agentRuns.map((run) => (
-              <button
-                key={String(run.id)}
-                type="button"
-                className={`data-row trace-run-row ${selectedRunId === String(run.id) ? "active" : ""}`}
-                onClick={() => loadRunTrace(String(run.id))}
-              >
-                <span>{String(run.selected_product_id ?? "—")}</span>
-                <span>{String(run.status)}</span>
-                <span>{timeAgo(String(run.created_at))}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="empty-state">No runs yet for this agent.</p>
-        )}
-      </section>
-
-      <section className="surface-card">
-        <span className="section-label">Audit log</span>
-        {agentActivity.length ? (
-          <div className="data-table">
-            {agentActivity.map((event) => (
-              <div key={String(event.id)} className="data-row activity">
-                <StatusChip value={String(event.event_type ?? event.type ?? "event")} />
-                <span>{String(event.summary ?? event.message ?? event.action ?? "Activity")}</span>
-                <span>{timeAgo(String(event.created_at))}</span>
+          <section className="surface-card">
+            <span className="section-label">Recent runs</span>
+            {agentRuns.length ? (
+              <div className="data-table">
+                {agentRuns.map((run) => (
+                  <button
+                    key={String(run.id)}
+                    type="button"
+                    className={`data-row trace-run-row ${selectedRunId === String(run.id) ? "active" : ""}`}
+                    onClick={() => loadRunTrace(String(run.id))}
+                  >
+                    <span>{String(run.selected_product_id ?? "—")}</span>
+                    <span>{String(run.status)}</span>
+                    <span>{timeAgo(String(run.created_at))}</span>
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="empty-state">Activity will appear here after runs and approvals.</p>
-        )}
-      </section>
+            ) : (
+              <p className="empty-state">No runs yet for this agent.</p>
+            )}
+          </section>
+
+          <section className="surface-card">
+            <span className="section-label">Audit log</span>
+            {agentActivity.length ? (
+              <div className="data-table">
+                {agentActivity.map((event) => (
+                  <div key={String(event.id)} className="data-row activity">
+                    <StatusChip value={String(event.event_type ?? event.type ?? "event")} />
+                    <span>{String(event.summary ?? event.message ?? event.action ?? "Activity")}</span>
+                    <span>{timeAgo(String(event.created_at))}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="empty-state">Activity will appear here after runs and approvals.</p>
+            )}
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -34,6 +34,10 @@ export async function executeAgentRun(
   });
 
   const agent = await repo.getById<any>("agents", body.agentId, "agent");
+  if (agent.role === "research_only") {
+    trace.error("agent", "Research-only agents cannot execute purchases", { role: agent.role });
+    throw conflict("research-only agents cannot execute purchases");
+  }
   const user = await repo.getById<any>("users", agent.user_id, "user");
   const mandate = await repo.getById<any>("mandates", body.mandateId, "mandate");
   if (mandate.agent_id !== body.agentId) throw conflict("mandate does not belong to agent");
@@ -229,8 +233,8 @@ export async function executeAgentRun(
     reason: `${body.objective} | Agent rationale: ${decision.rationale}`
   };
 
-  trace.step("settlement", "Applying mock settlement in VaultPay backend", {
-    note: "Balances and receipts are mock; T3N decision above is authoritative for policy.",
+  trace.step("settlement", "Applying settlement in VaultPay backend", {
+    note: "T3N policy decision above is authoritative; VaultPay finalizes balances and receipts.",
     precomputedDecision: t3nResult.decision.decision
   });
 

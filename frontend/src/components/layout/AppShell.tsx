@@ -130,13 +130,6 @@ function AppShellInner() {
               agentMandate={app.agentMandate}
               agentActivity={app.agentActivity}
               agentRuns={app.agentRuns}
-              candidates={app.candidates}
-              paymentChoice={app.paymentChoice}
-              setPaymentChoice={app.setPaymentChoice}
-              agentAllowedPaymentMethods={app.agentAllowedPaymentMethods}
-              objective={app.objective}
-              setObjective={app.setObjective}
-              runSelectedAgent={app.runSelectedAgent}
               busy={app.busy}
               setView={(view) => {
                 const next = typeof view === "function" ? view(app.view) : view;
@@ -146,6 +139,13 @@ function AppShellInner() {
               selectedRunId={app.selectedRunId}
               loadRunTrace={app.loadRunTrace}
               paymentMethods={app.paymentMethods}
+              agentAllowedPaymentMethods={app.agentAllowedPaymentMethods}
+              agentChat={app.agentChat}
+              chatDraft={app.chatDraft}
+              setChatDraft={app.setChatDraft}
+              chatLoading={app.chatLoading}
+              sendAgentChat={app.sendAgentChat}
+              runFromChat={app.runFromChat}
             />
           )}
           {app.view === "vault" && (

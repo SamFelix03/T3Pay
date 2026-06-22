@@ -1,6 +1,7 @@
 import { Router } from "./router";
 import { registerActivityRoutes } from "../modules/activity/routes";
 import { registerAgentRoutes } from "../modules/agents/routes";
+import { registerAgentChatRoutes } from "../modules/agent-chat/routes";
 import { registerAgentRunRoutes } from "../modules/agent-runs/routes";
 import { registerApprovalRoutes } from "../modules/approvals/routes";
 import { registerDashboardRoutes } from "../modules/dashboard/routes";
@@ -18,6 +19,7 @@ export function registerRoutes(router: Router): void {
   registerUserRoutes(router);
   registerVaultRoutes(router);
   registerAgentRoutes(router);
+  registerAgentChatRoutes(router);
   registerAgentRunRoutes(router);
   registerMandateRoutes(router);
   registerTaskRoutes(router);

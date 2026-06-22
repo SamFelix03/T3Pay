@@ -113,7 +113,7 @@ export async function runAgentTask(
       return { attempt };
     }
 
-    trace?.step("settlement", "T3N approved — finalizing mock payment", {
+    trace?.step("settlement", "T3N approved — finalizing payment", {
       productId: product.id,
       amountCents: product.price_cents,
       paymentMethodId: paymentMethod.id
@@ -202,7 +202,7 @@ export async function resumeApprovedTask(repo: SupabaseRepository, t3n: Vaultpay
 async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3nGateway, data: any) {
   const { input, agent, mandate, product, paymentMethod, trace } = data;
   if (paymentMethod.balance_cents < product.price_cents) {
-    trace?.error("settlement", "Insufficient mock payment balance", {
+    trace?.error("settlement", "Insufficient payment balance", {
       balanceCents: paymentMethod.balance_cents,
       requiredCents: product.price_cents
     });
@@ -278,7 +278,7 @@ async function executeApprovedPurchase(repo: SupabaseRepository, t3n: VaultpayT3
     p_created_at: createdAt
   });
   const attempt = decodeAttemptRow(finalized.attempt);
-  trace?.success("settlement", "Mock balances and inventory finalized atomically", {
+  trace?.success("settlement", "Balances and inventory finalized atomically", {
     attemptId: attempt.id,
     orderId,
     paymentMethodId: input.paymentMethodId,

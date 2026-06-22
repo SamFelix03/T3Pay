@@ -26,6 +26,8 @@ import type {
 import { MARKETPLACE_USE_CASES } from "@/lib/marketplace";
 import { buildAppUrl } from "@/lib/app-navigation";
 import { effectivePaymentMethodKinds, useCaseForRole } from "@/lib/agent-utils";
+import type { AgentChatBlock, AgentChatProposal, AgentChatResponse } from "@/lib/agent-chat-types";
+import { loadAgentChat, saveAgentChat } from "@/lib/agent-chat-types";
 
 const USE_CASES = MARKETPLACE_USE_CASES.map(({ id, label, objective }) => ({ id, label, objective }));
 
@@ -63,6 +65,9 @@ export function useVaultPayApp() {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [showDemoWelcome, setShowDemoWelcome] = useState(false);
   const [demoKitBalances, setDemoKitBalances] = useState({ card: 100_000, wallet: 100_000 });
+  const [agentChat, setAgentChat] = useState<AgentChatBlock[]>([]);
+  const [chatDraft, setChatDraft] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const syncingRef = useRef(false);
 
   const vaults = dashboard?.vaults ?? [];
@@ -116,6 +121,21 @@ export function useVaultPayApp() {
     const method = nextChoice === "stablecoin" ? agentWallet : agentCard;
     if (method?.id) setSelectedPaymentMethodId(String(method.id));
   }, [selectedAgent?.id, selectedAgent?.role, selectedAgent?.payment_method, agentVaultId, vaultMethodKey, agentCard?.id, agentWallet?.id]);
+
+  useEffect(() => {
+    if (!selectedAgentId) {
+      setAgentChat([]);
+      setChatDraft("");
+      return;
+    }
+    setAgentChat(loadAgentChat(selectedAgentId));
+    setChatDraft("");
+  }, [selectedAgentId]);
+
+  useEffect(() => {
+    if (!selectedAgentId) return;
+    saveAgentChat(selectedAgentId, agentChat);
+  }, [selectedAgentId, agentChat]);
 
   const refresh = useCallback(async (userId = session?.userId) => {
     const dashboardPath = userId ? `/api/dashboard?userId=${encodeURIComponent(userId)}` : "/api/dashboard";
@@ -445,22 +465,24 @@ export function useVaultPayApp() {
     setRunTrace((result.run.trace as RunTrace | null) ?? null);
   }
 
-  async function runSelectedAgent() {
+  async function runSelectedAgent(overrides?: { objective?: string; useCase?: UseCase }) {
     if (!selectedAgent || !agentMandate || !selectedPaymentMethod) {
       toast.error("Agent needs a mandate and payment method.");
-      return;
+      return null;
     }
+    const objectiveText = overrides?.objective ?? objective;
+    const useCaseValue = overrides?.useCase ?? runUseCase;
     setBusy(true);
     setRunTrace(null);
     setSelectedRunId(null);
-    const toastId = toast.loading("Groq is selecting a product. T3N will validate the purchase.");
+    const toastId = toast.loading("Running purchase workflow through T3N policy.");
     try {
       const result = await apiPost<{ run: AnyRow; purchase: AnyRow; trace: RunTrace }>("/api/agent-runs", {
         agentId: selectedAgent.id,
         mandateId: agentMandate.id,
         paymentMethodId: selectedPaymentMethod.id,
-        objective,
-        useCase: runUseCase,
+        objective: objectiveText,
+        useCase: useCaseValue,
         candidateLimit: 3
       });
       const purchase = result.purchase as AnyRow | undefined;
@@ -469,11 +491,68 @@ export function useVaultPayApp() {
       setSelectedRunId(String(result.run.id));
       toast.success(`Run complete · ${result.run.selected_product_id}`, toastId);
       await refresh();
+      return result;
     } catch (error) {
       toast.error((error as Error).message, toastId);
+      return null;
     } finally {
       setBusy(false);
     }
+  }
+
+  async function sendAgentChat() {
+    const text = chatDraft.trim();
+    if (!text || !selectedAgent || chatLoading || busy) return;
+    const userMessage: AgentChatBlock = { role: "user", text };
+    const history = [...agentChat, userMessage];
+    setAgentChat(history);
+    setChatDraft("");
+    setChatLoading(true);
+    try {
+      const result = await apiPost<AgentChatResponse>("/api/agent-chat", {
+        agentId: String(selectedAgent.id),
+        messages: history.map((block) => ({
+          role: block.role,
+          content: block.text ?? block.runSummary ?? ""
+        }))
+      });
+      setAgentChat([
+        ...history,
+        {
+          role: "assistant",
+          text: result.reply,
+          proposals: result.proposals,
+          canRun: result.canRun,
+          objective: result.objective,
+          useCase: result.useCase ?? undefined
+        }
+      ]);
+      if (result.objective) setObjective(result.objective);
+      if (result.useCase) setRunUseCase(result.useCase);
+    } catch (error) {
+      setAgentChat([
+        ...history,
+        { role: "assistant", text: (error as Error).message }
+      ]);
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function runFromChat(block: AgentChatBlock, proposal?: AgentChatProposal) {
+    const objectiveText = proposal
+      ? `${block.objective ?? objective} — prefer ${proposal.name}`
+      : block.objective ?? objective;
+    const useCaseValue = block.useCase ?? runUseCase;
+    const result = await runSelectedAgent({ objective: objectiveText, useCase: useCaseValue });
+    if (!result) return;
+    const run = result.run;
+    const rationale = String(run.rationale ?? "");
+    const summary = `Purchase run ${String(run.status)} · ${String(run.selected_product_id ?? "no product")}${rationale ? ` — ${rationale}` : ""}`;
+    setAgentChat((current) => [
+      ...current,
+      { role: "assistant", text: summary, runSummary: summary }
+    ]);
   }
 
   async function approveById(approvalId: string) {
@@ -599,6 +678,12 @@ export function useVaultPayApp() {
     createAgent,
     openAgentWorkspace,
     runSelectedAgent,
+    sendAgentChat,
+    runFromChat,
+    agentChat,
+    chatDraft,
+    setChatDraft,
+    chatLoading,
     approveById,
     rejectLatest,
     revokeAgent,
