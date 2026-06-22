@@ -7,22 +7,22 @@
 
 </div>
 
-**T3Pay** is a platform to **create and run personal shopping agents** — powered by [Terminal 3 (T3N)](https://terminal3.io). Spin up a *Shopping Agent* (or Travel, Subscription, and more), fund it from your vault, set a budget and rules, then chat with it to find and buy things for real. The gap it closes: between *asking* an AI to purchase something and actually letting it checkout. Agents get **card or stablecoin** spending power capped to your merchants and categories — they **place orders, hit limits, and route approvals without ever seeing your credentials**. Your rules live in sealed mandates, enforcement runs in the TEE, and every attempt leaves an auditable trail you can prove.
+**T3Pay** is a platform to **create and run personal agents** — powered by [Terminal 3 (T3N)](https://terminal3.io). Spin up a *Shopping Agent* (or Travel, Subscription, and more), fund it from your vault, set a budget and rules, then chat with it to find and buy things for real. The gap it closes: between *asking* an AI to purchase something and actually letting it checkout. Agents get **card or stablecoin** spending power capped to your merchants and categories — they **place orders, hit limits, and route approvals without ever seeing your credentials**. Your rules live in sealed mandates, enforcement runs in the TEE, and every attempt leaves an auditable trail you can prove.
 
-Check out how Terminal 3's Agent Dev Kit and T3N power your agents at [this section](#how-terminal-3-powers-t3pay).
+Check out how Terminal 3's Agent Dev Kit and T3N power your agents at [this section](https://github.com/SamFelix03/T3Pay/blob/main/README.md#how-terminal-3-powers-t3pay).
 
 ---
 
 ## Table of contents
 
-1. [Important links](#important-links)
-2. [Bug reports](#bug-reports)
-3. [How to demo](#how-to-demo)
-4. [The problem](#the-problem)
-5. [Introduction](#introduction)
-6. [How it all works](#how-it-all-works)
-7. [How Terminal 3 powers T3Pay](#how-terminal-3-powers-t3pay)
-8. [Conclusion](#conclusion)
+1. [Important links](https://github.com/SamFelix03/T3Pay/blob/main/README.md#important-links)
+2. [Bug reports](https://github.com/SamFelix03/T3Pay/blob/main/README.md#bug-reports)
+3. [How to demo](https://github.com/SamFelix03/T3Pay/blob/main/README.md#how-to-demo)
+4. [The problem](https://github.com/SamFelix03/T3Pay/blob/main/README.md#the-problem)
+5. [Introduction](https://github.com/SamFelix03/T3Pay/blob/main/README.md#introduction)
+6. [How it all works](https://github.com/SamFelix03/T3Pay/blob/main/README.md#how-it-all-works)
+7. [How Terminal 3 powers T3Pay](https://github.com/SamFelix03/T3Pay/blob/main/README.md#how-terminal-3-powers-t3pay)
+8. [Conclusion](https://github.com/SamFelix03/T3Pay/blob/main/README.md#conclusion)
 
 ---
 
@@ -33,31 +33,31 @@ Check out how Terminal 3's Agent Dev Kit and T3N power your agents at [this sect
 | **Live app** | [View Here](https://t3pay.vercel.app) |
 | **Demo video** | [View Here](https://www.youtube.com/watch?v=ssX6L3SSbLY) |
 | **Pitch deck** | [View Here](https://canva.link/1w5mzd1ehprryvv) |
-| **T3N / ADK bug summary** | [`issues/bug-summary.md`](issues/bug-summary.md) |
+| **T3N / ADK bug summary** | [`issues/bug-summary.md`](https://github.com/SamFelix03/T3Pay/blob/main/issues/bug-summary.md) |
 
 ## Bug reports
 
-While building T3Pay on Terminal 3, I identified **7 bugs** and **8 documentation gaps** in the T3N platform, SDK, and official docs. Each item includes severity, T3Pay impact, workarounds, and a verification audit against the published documentation. The full list is in [`issues/bug-summary.md`](issues/bug-summary.md).
+While building T3Pay on Terminal 3, I identified **7 bugs** and **8 documentation gaps** in the T3N platform, SDK, and official docs. Each item includes severity, T3Pay impact, workarounds, and a verification audit against the published documentation. The full list is in [`issues/bug-summary.md`](https://github.com/SamFelix03/T3Pay/blob/main/issues/bug-summary.md).
 
 ### Contracts & T3N artifacts
 
 | Artifact | Version | Description | Path |
 |---|---|---|---|
-| VaultPay WASM contract | `0.2.1` | Rust → WASM tenant contract (mandates, policy, receipts) | [`contracts/vaultpay/src/vaultpay.rs`](contracts/vaultpay/src/vaultpay.rs) |
-| Contract exports / WIT bindings | `0.2.1` | WIT `contracts` interface surface | [`contracts/vaultpay/src/lib.rs`](contracts/vaultpay/src/lib.rs) |
-| Contract data model | — | Compact mandate / approval / receipt types | [`contracts/vaultpay/src/model.rs`](contracts/vaultpay/src/model.rs) |
-| WIT world | `0.1.0` | Imports: `kv-store`, `http`, `http-with-placeholders` | [`contracts/vaultpay/wit/world.wit`](contracts/vaultpay/wit/world.wit) |
-| Build script | — | `wasm32-wasip2` release build | [`scripts/build-contracts.sh`](scripts/build-contracts.sh) |
-| Register on T3N | — | `tenant.contracts.register` | [`scripts/register-contracts.mjs`](scripts/register-contracts.mjs) |
-| Contract invoke smoke | — | `create-mandate`, `read-mandate`, `validate-and-pay` | [`scripts/invoke-contract-demo.mjs`](scripts/invoke-contract-demo.mjs) |
-| KV map smoke | — | `map-entry-set` for mandates/secrets | [`scripts/map-smoke.mjs`](scripts/map-smoke.mjs) |
-| Seed payment secrets | — | Demo credential refs in `z:<tid>:secrets` | [`scripts/seed-secrets.mjs`](scripts/seed-secrets.mjs) |
-| E2E API proof | — | Full T3N-backed demo + revocation | [`scripts/e2e-api.mjs`](scripts/e2e-api.mjs) |
-| T3N KV issue notes | — | `map-entry-set` size limits & workarounds | [`issues/t3n-kv-map-entry-set-and-contract-kv-put-500.md`](issues/t3n-kv-map-entry-set-and-contract-kv-put-500.md) |
+| VaultPay WASM contract | `0.2.1` | Rust → WASM tenant contract (mandates, policy, receipts) | [`contracts/vaultpay/src/vaultpay.rs`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs) |
+| Contract exports / WIT bindings | `0.2.1` | WIT `contracts` interface surface | [`contracts/vaultpay/src/lib.rs`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/lib.rs) |
+| Contract data model | — | Compact mandate / approval / receipt types | [`contracts/vaultpay/src/model.rs`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/model.rs) |
+| WIT world | `0.1.0` | Imports: `kv-store`, `http`, `http-with-placeholders` | [`contracts/vaultpay/wit/world.wit`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/wit/world.wit) |
+| Build script | — | `wasm32-wasip2` release build | [`scripts/build-contracts.sh`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/build-contracts.sh) |
+| Register on T3N | — | `tenant.contracts.register` | [`scripts/register-contracts.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/register-contracts.mjs) |
+| Contract invoke smoke | — | `create-mandate`, `read-mandate`, `validate-and-pay` | [`scripts/invoke-contract-demo.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/invoke-contract-demo.mjs) |
+| KV map smoke | — | `map-entry-set` for mandates/secrets | [`scripts/map-smoke.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/map-smoke.mjs) |
+| Seed payment secrets | — | Demo credential refs in `z:<tid>:secrets` | [`scripts/seed-secrets.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/seed-secrets.mjs) |
+| E2E API proof | — | Full T3N-backed demo + revocation | [`scripts/e2e-api.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/e2e-api.mjs) |
+| T3N KV issue notes | — | `map-entry-set` size limits & workarounds | [`issues/t3n-kv-map-entry-set-and-contract-kv-put-500.md`](https://github.com/SamFelix03/T3Pay/blob/main/issues/t3n-kv-map-entry-set-and-contract-kv-put-500.md) |
 
 ### T3N map tails (tenant KV)
 
-Defined in [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L16-L23):
+Defined in [`backend/src/config/constants.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/config/constants.ts#L16-L23):
 
 | Map tail | Purpose |
 |---|---|
@@ -156,21 +156,21 @@ T3Pay is a **platform for creating and using governed agents** — starting with
 | **Research-only** | Search and recommend — no checkout |
 | **Custom** | Your own scope and limits |
 
-Roles are configured in [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L25). Each agent gets its own workspace, chat, and spending mandate.
+Roles are configured in [`backend/src/config/constants.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/config/constants.ts#L25). Each agent gets its own workspace, chat, and spending mandate.
 
 ### Core user flow
 
-1. Create a **private vault** with demo card and/or USDC wallet — [`backend/src/modules/vaults/routes.ts`](backend/src/modules/vaults/routes.ts)
-2. **Create your first agent** (e.g. Shopping Agent) — [`backend/src/modules/agents/routes.ts`](backend/src/modules/agents/routes.ts#L31-L65)
-3. Assign a **role** and spending limits — [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L25)
-4. Seal a **spending mandate** (budget, merchants, categories, limits, expiry) — [`backend/src/modules/mandates/routes.ts`](backend/src/modules/mandates/routes.ts)
-5. Agent requests purchase via chat or run — [`backend/src/modules/agent-chat/`](backend/src/modules/agent-chat/) + [`backend/src/modules/agent-runs/`](backend/src/modules/agent-runs/)
-6. TEE validates and executes (or rejects / pending) — [`backend/src/modules/t3n/gateway.ts`](backend/src/modules/t3n/gateway.ts)
-7. User monitors dashboard, runs, receipts, approvals — [`frontend/src/components/dashboard/`](frontend/src/components/dashboard/)
+1. Create a **private vault** with demo card and/or USDC wallet — [`backend/src/modules/vaults/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/vaults/routes.ts)
+2. **Create your first agent** (e.g. Shopping Agent) — [`backend/src/modules/agents/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agents/routes.ts#L31-L65)
+3. Assign a **role** and spending limits — [`backend/src/config/constants.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/config/constants.ts#L25)
+4. Seal a **spending mandate** (budget, merchants, categories, limits, expiry) — [`backend/src/modules/mandates/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/mandates/routes.ts)
+5. Agent requests purchase via chat or run — [`backend/src/modules/agent-chat/`](https://github.com/SamFelix03/T3Pay/tree/main/backend/src/modules/agent-chat/) + [`backend/src/modules/agent-runs/`](https://github.com/SamFelix03/T3Pay/tree/main/backend/src/modules/agent-runs/)
+6. TEE validates and executes (or rejects / pending) — [`backend/src/modules/t3n/gateway.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts)
+7. User monitors dashboard, runs, receipts, approvals — [`frontend/src/components/dashboard/`](https://github.com/SamFelix03/T3Pay/tree/main/frontend/src/components/dashboard/)
 
 ### Policy decisions
 
-Every attempt ends in one of: `approved` · `rejected` · `pending_approval` · `revoked` · `expired` — [`backend/src/config/constants.ts`](backend/src/config/constants.ts#L28).
+Every attempt ends in one of: `approved` · `rejected` · `pending_approval` · `revoked` · `expired` — [`backend/src/config/constants.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/config/constants.ts#L28).
 
 ---
 
@@ -195,100 +195,100 @@ User ──► App (Next.js) ──► API (Node) ──► T3N TenantClient / T
 
 | Concern | Implementation |
 |---|---|
-| App entry | [`frontend/src/app/page.tsx`](frontend/src/app/page.tsx) → [`frontend/src/components/layout/AppShell.tsx`](frontend/src/components/layout/AppShell.tsx) |
-| URL-driven views (dashboard, agent, runs, vault…) | [`frontend/src/lib/app-navigation.ts`](frontend/src/lib/app-navigation.ts) + [`AppShell.tsx`](frontend/src/components/layout/AppShell.tsx#L57-L70) |
-| Global state & API orchestration | [`frontend/src/hooks/useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts) |
-| API proxy to backend | [`frontend/src/app/api/t3pay/[...path]/route.ts`](frontend/src/app/api/t3pay/[...path]/route.ts) |
+| App entry | [`frontend/src/app/page.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/app/page.tsx) → [`frontend/src/components/layout/AppShell.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/layout/AppShell.tsx) |
+| URL-driven views (dashboard, agent, runs, vault…) | [`frontend/src/lib/app-navigation.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/lib/app-navigation.ts) + [`AppShell.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/layout/AppShell.tsx#L57-L70) |
+| Global state & API orchestration | [`frontend/src/hooks/useVaultPayApp.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/hooks/useVaultPayApp.ts) |
+| API proxy to backend | [`frontend/src/app/api/t3pay/[...path]/route.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/app/api/t3pay/%5B...path%5D/route.ts) |
 
 ### 2. Authentication & session
 
 | Step | Code |
 |---|---|
-| Supabase email auth gate | [`frontend/src/components/onboarding/LoginGate.tsx`](frontend/src/components/onboarding/LoginGate.tsx) |
-| Session bootstrap | [`backend/src/modules/users/routes.ts`](backend/src/modules/users/routes.ts) |
-| Demo welcome onboarding | [`frontend/src/components/onboarding/DemoWelcomeModal.tsx`](frontend/src/components/onboarding/DemoWelcomeModal.tsx) |
+| Supabase email auth gate | [`frontend/src/components/onboarding/LoginGate.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/onboarding/LoginGate.tsx) |
+| Session bootstrap | [`backend/src/modules/users/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/users/routes.ts) |
+| Demo welcome onboarding | [`frontend/src/components/onboarding/DemoWelcomeModal.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/onboarding/DemoWelcomeModal.tsx) |
 
 ### 3. Vaults & payment methods
 
 | Step | Code |
 |---|---|
-| Create vault | [`backend/src/modules/vaults/routes.ts`](backend/src/modules/vaults/routes.ts#L21-L28) |
-| Issue demo card / wallet (`t3n_secret_ref` per method) | [`backend/src/modules/vaults/routes.ts`](backend/src/modules/vaults/routes.ts#L37-L64) |
-| Attach existing instrument (no duplication) | [`backend/src/modules/vaults/routes.ts`](backend/src/modules/vaults/routes.ts#L66-L86) |
-| Card/wallet modals (preview only, no raw secrets) | [`frontend/src/components/vault/AssetHubModal.tsx`](frontend/src/components/vault/AssetHubModal.tsx) |
+| Create vault | [`backend/src/modules/vaults/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/vaults/routes.ts#L21-L28) |
+| Issue demo card / wallet (`t3n_secret_ref` per method) | [`backend/src/modules/vaults/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/vaults/routes.ts#L37-L64) |
+| Attach existing instrument (no duplication) | [`backend/src/modules/vaults/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/vaults/routes.ts#L66-L86) |
+| Card/wallet modals (preview only, no raw secrets) | [`frontend/src/components/vault/AssetHubModal.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/vault/AssetHubModal.tsx) |
 
 ### 4. Agents, mandates & ADK grants
 
 Creating an agent is a **two-step API flow** from the UI:
 
-1. `POST /api/agents` — derive or link T3N agent DID — [`useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts#L399-L405) · [`agents/routes.ts`](backend/src/modules/agents/routes.ts#L39-L41) · [`gateway.ts#createAgentIdentity`](backend/src/modules/t3n/gateway.ts#L245-L260)
-2. `POST /api/mandates` — seal mandate on T3N + create ADK grant — [`useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts#L407-L419) · [`mandates/routes.ts`](backend/src/modules/mandates/routes.ts#L48-L60) · [`gateway.ts#createAgentGrant`](backend/src/modules/t3n/gateway.ts#L263-L392)
+1. `POST /api/agents` — derive or link T3N agent DID — [`useVaultPayApp.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/hooks/useVaultPayApp.ts#L399-L405) · [`agents/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agents/routes.ts#L39-L41) · [`gateway.ts#createAgentIdentity`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L245-L260)
+2. `POST /api/mandates` — seal mandate on T3N + create ADK grant — [`useVaultPayApp.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/hooks/useVaultPayApp.ts#L407-L419) · [`mandates/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/mandates/routes.ts#L48-L60) · [`gateway.ts#createAgentGrant`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L263-L392)
 
-Revocation calls `revokeDelegation` on T3N and revokes mandates — [`agents/routes.ts`](backend/src/modules/agents/routes.ts#L102-L119).
+Revocation calls `revokeDelegation` on T3N and revokes mandates — [`agents/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agents/routes.ts#L102-L119).
 
 ### 5. Agent chat (Groq)
 
 | Step | Code |
 |---|---|
-| Load **full** product catalog (no pre-filter) | [`backend/src/modules/catalog/products.ts`](backend/src/modules/catalog/products.ts) |
-| Groq role-scoped chat + proposals | [`backend/src/modules/agent-chat/groq-chat.ts`](backend/src/modules/agent-chat/groq-chat.ts) |
-| Chat API | [`backend/src/modules/agent-chat/service.ts`](backend/src/modules/agent-chat/service.ts) |
-| Chat UI + example prompts | [`frontend/src/components/agents/chat/AgentChatPanel.tsx`](frontend/src/components/agents/chat/AgentChatPanel.tsx) |
+| Load **full** product catalog (no pre-filter) | [`backend/src/modules/catalog/products.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/catalog/products.ts) |
+| Groq role-scoped chat + proposals | [`backend/src/modules/agent-chat/groq-chat.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-chat/groq-chat.ts) |
+| Chat API | [`backend/src/modules/agent-chat/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-chat/service.ts) |
+| Chat UI + example prompts | [`frontend/src/components/agents/chat/AgentChatPanel.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/agents/chat/AgentChatPanel.tsx) |
 
 ### 6. Agent runs (Groq selection → T3N policy)
 
 | Step | Code |
 |---|---|
-| `POST /api/agent-runs` | [`backend/src/modules/agent-runs/routes.ts`](backend/src/modules/agent-runs/routes.ts#L47-L52) |
-| Load catalog → user-selected product **or** Groq pick | [`backend/src/modules/agent-runs/run-flow.ts`](backend/src/modules/agent-runs/run-flow.ts#L128-L195) |
-| Agent DID auth + delegated `validate-and-pay` | [`run-flow.ts`](backend/src/modules/agent-runs/run-flow.ts#L107-L243) · [`gateway.ts#validateAndPayAsAgent`](backend/src/modules/t3n/gateway.ts#L146-L243) |
-| Groq product selection | [`backend/src/modules/agent-runs/groq.ts`](backend/src/modules/agent-runs/groq.ts) |
-| Persist run + trace | [`run-flow.ts`](backend/src/modules/agent-runs/run-flow.ts#L249-L299) |
-| Run detail / candidate table / policy outcome | [`frontend/src/components/runs/RunDetailView.tsx`](frontend/src/components/runs/RunDetailView.tsx) |
-| Live trace panel | [`frontend/src/components/agents/RunTracePanel.tsx`](frontend/src/components/agents/RunTracePanel.tsx) |
+| `POST /api/agent-runs` | [`backend/src/modules/agent-runs/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-runs/routes.ts#L47-L52) |
+| Load catalog → user-selected product **or** Groq pick | [`backend/src/modules/agent-runs/run-flow.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-runs/run-flow.ts#L128-L195) |
+| Agent DID auth + delegated `validate-and-pay` | [`run-flow.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-runs/run-flow.ts#L107-L243) · [`gateway.ts#validateAndPayAsAgent`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L146-L243) |
+| Groq product selection | [`backend/src/modules/agent-runs/groq.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-runs/groq.ts) |
+| Persist run + trace | [`run-flow.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/agent-runs/run-flow.ts#L249-L299) |
+| Run detail / candidate table / policy outcome | [`frontend/src/components/runs/RunDetailView.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/runs/RunDetailView.tsx) |
+| Live trace panel | [`frontend/src/components/agents/RunTracePanel.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/agents/RunTracePanel.tsx) |
 
 ### 7. Settlement & merchant boundary
 
 | Step | Code |
 |---|---|
-| Policy decision applied | [`backend/src/modules/tasks/service.ts`](backend/src/modules/tasks/service.ts#L26-L114) |
-| Approved path: T3N budget update + mock checkout + receipt | [`tasks/service.ts`](backend/src/modules/tasks/service.ts#L202-L296) |
-| Mock merchant catalog & checkout | [`backend/src/modules/merchant/service.ts`](backend/src/modules/merchant/service.ts) |
-| Atomic finalize (Postgres RPC) | [`backend/supabase/schema.sql`](backend/supabase/schema.sql) (`vaultpay_finalize_purchase`) |
+| Policy decision applied | [`backend/src/modules/tasks/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/tasks/service.ts#L26-L114) |
+| Approved path: T3N budget update + mock checkout + receipt | [`tasks/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/tasks/service.ts#L202-L296) |
+| Mock merchant catalog & checkout | [`backend/src/modules/merchant/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/merchant/service.ts) |
+| Atomic finalize (Postgres RPC) | [`backend/supabase/schema.sql`](https://github.com/SamFelix03/T3Pay/blob/main/backend/supabase/schema.sql) (`vaultpay_finalize_purchase`) |
 
-Rejected / pending paths record `purchase_attempts` without deducting budget — [`tasks/service.ts`](backend/src/modules/tasks/service.ts#L75-L113).
+Rejected / pending paths record `purchase_attempts` without deducting budget — [`tasks/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/tasks/service.ts#L75-L113).
 
 ### 8. Approvals
 
 | Step | Code |
 |---|---|
-| T3N `create-approval-request` on threshold breach | [`gateway.ts`](backend/src/modules/t3n/gateway.ts#L428-L433) · [`tasks/service.ts`](backend/src/modules/tasks/service.ts#L315-L338) |
-| User approve → `approve-action` → resume purchase | [`approvals/routes.ts`](backend/src/modules/approvals/routes.ts#L16-L33) · [`tasks/service.ts#resumeApprovedTask`](backend/src/modules/tasks/service.ts#L134-L198) |
-| Approvals inbox UI | [`frontend/src/components/approvals/ApprovalsView.tsx`](frontend/src/components/approvals/ApprovalsView.tsx) |
+| T3N `create-approval-request` on threshold breach | [`gateway.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L428-L433) · [`tasks/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/tasks/service.ts#L315-L338) |
+| User approve → `approve-action` → resume purchase | [`approvals/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/approvals/routes.ts#L16-L33) · [`tasks/service.ts#resumeApprovedTask`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/tasks/service.ts#L134-L198) |
+| Approvals inbox UI | [`frontend/src/components/approvals/ApprovalsView.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/approvals/ApprovalsView.tsx) |
 
 ### 9. Receipts & verification
 
 | Step | Code |
 |---|---|
-| Issue via T3N `issue-receipt` contract | [`backend/src/modules/receipts/service.ts`](backend/src/modules/receipts/service.ts#L58-L106) |
-| Deterministic hash verify (demo; not SD-JWT on current testnet) | [`receipts/service.ts`](backend/src/modules/receipts/service.ts#L109-L119) |
-| Receipts UI + detail modal | [`frontend/src/components/receipts/ReceiptsView.tsx`](frontend/src/components/receipts/ReceiptsView.tsx) |
+| Issue via T3N `issue-receipt` contract | [`backend/src/modules/receipts/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/receipts/service.ts#L58-L106) |
+| Deterministic hash verify (demo; not SD-JWT on current testnet) | [`receipts/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/receipts/service.ts#L109-L119) |
+| Receipts UI + detail modal | [`frontend/src/components/receipts/ReceiptsView.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/receipts/ReceiptsView.tsx) |
 
 ### 10. Dashboard & activity
 
 | Concern | Code |
 |---|---|
-| Aggregated totals | [`backend/src/modules/dashboard/routes.ts`](backend/src/modules/dashboard/routes.ts) |
-| Audit log writes | [`backend/src/modules/activity/service.ts`](backend/src/modules/activity/service.ts) |
-| Dashboard UI | [`frontend/src/components/dashboard/DashboardView.tsx`](frontend/src/components/dashboard/DashboardView.tsx) |
+| Aggregated totals | [`backend/src/modules/dashboard/routes.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/dashboard/routes.ts) |
+| Audit log writes | [`backend/src/modules/activity/service.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/activity/service.ts) |
+| Dashboard UI | [`frontend/src/components/dashboard/DashboardView.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/dashboard/DashboardView.tsx) |
 
 ### 11. Chat purchase outcomes
 
 | Outcome | UI |
 |---|---|
-| `approved` | Green success card — [`AgentChatMessage.tsx`](frontend/src/components/agents/chat/AgentChatMessage.tsx) |
-| `rejected` / `revoked` | Red blocked card — [`purchase-outcome.ts`](frontend/src/lib/purchase-outcome.ts) |
-| `pending_approval` | Amber approval card — [`useVaultPayApp.ts#runFromChat`](frontend/src/hooks/useVaultPayApp.ts#L598-L612) |
+| `approved` | Green success card — [`AgentChatMessage.tsx`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/components/agents/chat/AgentChatMessage.tsx) |
+| `rejected` / `revoked` | Red blocked card — [`purchase-outcome.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/lib/purchase-outcome.ts) |
+| `pending_approval` | Amber approval card — [`useVaultPayApp.ts#runFromChat`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/hooks/useVaultPayApp.ts#L598-L612) |
 
 ---
 
@@ -302,97 +302,97 @@ Single consolidated contract (requirements described four logical contracts; imp
 
 | Export | Responsibility | Rust implementation |
 |---|---|---|
-| `create-mandate` | Seal compact mandate + hash | [`vaultpay.rs#L15-L21`](contracts/vaultpay/src/vaultpay.rs#L15-L21) · export [`lib.rs#L30-L35`](contracts/vaultpay/src/lib.rs#L30-L35) |
-| `read-mandate` | Fetch mandate from KV | [`vaultpay.rs#L23-L38`](contracts/vaultpay/src/vaultpay.rs#L23-L38) |
-| `read-remaining` | Budget remaining query | [`vaultpay.rs#L40-L52`](contracts/vaultpay/src/vaultpay.rs#L40-L52) · export [`lib.rs#L51-L56`](contracts/vaultpay/src/lib.rs#L51-L56) |
-| `revoke-mandate` | Mark mandate revoked | [`vaultpay.rs#L54-L62`](contracts/vaultpay/src/vaultpay.rs#L54-L62) |
-| `validate-and-pay` | **Core policy engine** | [`vaultpay.rs#L64-L71`](contracts/vaultpay/src/vaultpay.rs#L64-L71) · [`evaluate_policy`](contracts/vaultpay/src/vaultpay.rs#L110-L163) |
-| `create-approval-request` | Pending approval record | [`vaultpay.rs#L73-L79`](contracts/vaultpay/src/vaultpay.rs#L73-L79) |
-| `approve-action` | Mark approval approved | [`vaultpay.rs#L81-L83`](contracts/vaultpay/src/vaultpay.rs#L81-L83) |
-| `reject-action` | Mark approval rejected | [`vaultpay.rs#L85-L87`](contracts/vaultpay/src/vaultpay.rs#L85-L87) |
-| `issue-receipt` | Receipt + content hash | [`vaultpay.rs#L89-L95`](contracts/vaultpay/src/vaultpay.rs#L89-L95) |
-| `verify-receipt` | Hash integrity check | [`vaultpay.rs#L97-L108`](contracts/vaultpay/src/vaultpay.rs#L97-L108) |
+| `create-mandate` | Seal compact mandate + hash | [`vaultpay.rs#L15-L21`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L15-L21) · export [`lib.rs#L30-L35`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/lib.rs#L30-L35) |
+| `read-mandate` | Fetch mandate from KV | [`vaultpay.rs#L23-L38`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L23-L38) |
+| `read-remaining` | Budget remaining query | [`vaultpay.rs#L40-L52`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L40-L52) · export [`lib.rs#L51-L56`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/lib.rs#L51-L56) |
+| `revoke-mandate` | Mark mandate revoked | [`vaultpay.rs#L54-L62`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L54-L62) |
+| `validate-and-pay` | **Core policy engine** | [`vaultpay.rs#L64-L71`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L64-L71) · [`evaluate_policy`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L110-L163) |
+| `create-approval-request` | Pending approval record | [`vaultpay.rs#L73-L79`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L73-L79) |
+| `approve-action` | Mark approval approved | [`vaultpay.rs#L81-L83`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L81-L83) |
+| `reject-action` | Mark approval rejected | [`vaultpay.rs#L85-L87`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L85-L87) |
+| `issue-receipt` | Receipt + content hash | [`vaultpay.rs#L89-L95`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L89-L95) |
+| `verify-receipt` | Hash integrity check | [`vaultpay.rs#L97-L108`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L97-L108) |
 
-**Policy checks inside `evaluate_policy`:** revoked · expired · agent mismatch · merchant allowlist · category allowlist · payment method · budget · per-purchase limit · approval threshold — [`vaultpay.rs#L125-L154`](contracts/vaultpay/src/vaultpay.rs#L125-L154).
+**Policy checks inside `evaluate_policy`:** revoked · expired · agent mismatch · merchant allowlist · category allowlist · payment method · budget · per-purchase limit · approval threshold — [`vaultpay.rs#L125-L154`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs#L125-L154).
 
-**WIT host imports declared** (payment boundary architecture): `kv-store`, `http`, `http-with-placeholders`, `logging`, `tenant-context` — [`world.wit`](contracts/vaultpay/wit/world.wit). Settlement against the mock merchant runs in the Node backend today; credential injection is modeled at the T3N boundary per requirements.
+**WIT host imports declared** (payment boundary architecture): `kv-store`, `http`, `http-with-placeholders`, `logging`, `tenant-context` — [`world.wit`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/wit/world.wit). Settlement against the mock merchant runs in the Node backend today; credential injection is modeled at the T3N boundary per requirements.
 
-**Compact record limit:** 511 bytes — [`constants.ts`](backend/src/config/constants.ts#L8) · enforced [`vaultpay.rs`](contracts/vaultpay/src/vaultpay.rs) via `MAX_CONTRACT_RECORD_BYTES`.
+**Compact record limit:** 511 bytes — [`constants.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/config/constants.ts#L8) · enforced [`vaultpay.rs`](https://github.com/SamFelix03/T3Pay/blob/main/contracts/vaultpay/src/vaultpay.rs) via `MAX_CONTRACT_RECORD_BYTES`.
 
 ### Backend T3N gateway
 
-All SDK calls funnel through [`backend/src/modules/t3n/gateway.ts`](backend/src/modules/t3n/gateway.ts).
+All SDK calls funnel through [`backend/src/modules/t3n/gateway.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts).
 
 | Gateway method | T3N / contract action |
 |---|---|
-| `createMandate` | `create-mandate` + KV write — [L78-L83](backend/src/modules/t3n/gateway.ts#L78-L83) |
-| `readMandate` | `read-mandate` — [L91-L93](backend/src/modules/t3n/gateway.ts#L91-L93) |
-| `revokeMandate` | `revoke-mandate` — [L85-L89](backend/src/modules/t3n/gateway.ts#L85-L89) |
-| `validateAndPay` | User-tenant `validate-and-pay` — [L95-L119](backend/src/modules/t3n/gateway.ts#L95-L119) |
-| `validateAndPayAsAgent` | Agent-auth path + `executeBusinessContract` — [L146-L243](backend/src/modules/t3n/gateway.ts#L146-L243) |
-| `createAgentIdentity` | Separate agent DID via derived key — [L245-L260](backend/src/modules/t3n/gateway.ts#L245-L260) |
-| `authenticateAgent` | Agent handshake + `createEthAuthInput` — [L121-L144](backend/src/modules/t3n/gateway.ts#L121-L144) |
-| `createAgentGrant` | Full ADK delegation pipeline — [L263-L392](backend/src/modules/t3n/gateway.ts#L263-L392) |
-| `revokeAgentGrant` | `revokeDelegation` — [L394-L407](backend/src/modules/t3n/gateway.ts#L394-L407) |
-| `getAgentProof` | `getAuditEvents` + `contracts.logs` — [L409-L426](backend/src/modules/t3n/gateway.ts#L409-L426) |
-| `createApproval` / `approveAction` / `rejectAction` | Approval contract fns — [L428-L445](backend/src/modules/t3n/gateway.ts#L428-L445) |
-| `issueReceipt` / `verifyReceipt` | Receipt contract fns — [L447-L456](backend/src/modules/t3n/gateway.ts#L447-L456) |
-| `writeMapValue` | `executeControl("map-entry-set")` — [L458-L467](backend/src/modules/t3n/gateway.ts#L458-L467) |
+| `createMandate` | `create-mandate` + KV write — [L78-L83](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L78-L83) |
+| `readMandate` | `read-mandate` — [L91-L93](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L91-L93) |
+| `revokeMandate` | `revoke-mandate` — [L85-L89](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L85-L89) |
+| `validateAndPay` | User-tenant `validate-and-pay` — [L95-L119](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L95-L119) |
+| `validateAndPayAsAgent` | Agent-auth path + `executeBusinessContract` — [L146-L243](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L146-L243) |
+| `createAgentIdentity` | Separate agent DID via derived key — [L245-L260](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L245-L260) |
+| `authenticateAgent` | Agent handshake + `createEthAuthInput` — [L121-L144](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L121-L144) |
+| `createAgentGrant` | Full ADK delegation pipeline — [L263-L392](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L263-L392) |
+| `revokeAgentGrant` | `revokeDelegation` — [L394-L407](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L394-L407) |
+| `getAgentProof` | `getAuditEvents` + `contracts.logs` — [L409-L426](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L409-L426) |
+| `createApproval` / `approveAction` / `rejectAction` | Approval contract fns — [L428-L445](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L428-L445) |
+| `issueReceipt` / `verifyReceipt` | Receipt contract fns — [L447-L456](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L447-L456) |
+| `writeMapValue` | `executeControl("map-entry-set")` — [L458-L467](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L458-L467) |
 
 ### `@terminal3/t3n-sdk` — every surface used in this repo
 
 | SDK export / API | Role in T3Pay | Primary reference |
 |---|---|---|
-| `setEnvironment` | Target testnet/production | [`gateway.ts#L541-L547`](backend/src/modules/t3n/gateway.ts#L541-L547) · [`scripts/lib/t3n-client.mjs`](scripts/lib/t3n-client.mjs#L15) |
-| `setNodeUrl` | Optional custom node | [`gateway.ts#L546`](backend/src/modules/t3n/gateway.ts#L546) |
-| `getNodeUrl` | Resolve T3N base URL | [`gateway.ts#L501`](backend/src/modules/t3n/gateway.ts#L501) |
-| `loadWasmComponent` | WASM loader for `T3nClient` | [`gateway.ts#L524`](backend/src/modules/t3n/gateway.ts#L524) |
-| `T3nClient` | Core client (handshake, auth, execute) | [`gateway.ts#L522-L528`](backend/src/modules/t3n/gateway.ts#L522-L528) |
-| `TenantClient` | Tenant contracts, controls, delegated exec | [`gateway.ts#L508-L514`](backend/src/modules/t3n/gateway.ts#L508-L514) |
-| `createEthAuthInput` | ETH-based DID authentication | [`gateway.ts#L133`](backend/src/modules/t3n/gateway.ts#L133) |
-| `eth_get_address` | Derive address from private key | [`gateway.ts#L130`](backend/src/modules/t3n/gateway.ts#L130) |
-| `metamask_sign` | `EthSign` handler for headless signing | [`gateway.ts#L526`](backend/src/modules/t3n/gateway.ts#L526) |
-| `t3n.handshake()` | Session establishment | [`gateway.ts#L132`](backend/src/modules/t3n/gateway.ts#L132) |
-| `t3n.authenticate()` | Bind session to DID | [`gateway.ts#L133`](backend/src/modules/t3n/gateway.ts#L133) |
-| `tenant.contracts.register` | Publish WASM to tenant | [`scripts/register-contracts.mjs#L17`](scripts/register-contracts.mjs#L17) |
-| `tenant.contracts.execute` | Invoke contract functions | [`gateway.ts#L472-L476`](backend/src/modules/t3n/gateway.ts#L472-L476) |
-| `tenant.contracts.logs` | Contract execution logs | [`gateway.ts#L420`](backend/src/modules/t3n/gateway.ts#L420) |
-| `tenant.executeControl("map-entry-set")` | KV map writes | [`gateway.ts#L461-L465`](backend/src/modules/t3n/gateway.ts#L461-L465) |
-| `tenant.canonicalName` | Map / contract name resolution | [`gateway.ts#L462`](backend/src/modules/t3n/gateway.ts#L462) |
-| `tenant.executeBusinessContract` | Agent-delegated `validate-and-pay` | [`gateway.ts#L200-L207`](backend/src/modules/t3n/gateway.ts#L200-L207) |
-| `buildDelegationCredential` | ADK delegation VC payload | [`gateway.ts#L319-L334`](backend/src/modules/t3n/gateway.ts#L319-L334) |
-| `canonicaliseCredential` | JCS canonical form | [`gateway.ts#L335`](backend/src/modules/t3n/gateway.ts#L335) |
-| `signCredential` | User signature on delegation | [`gateway.ts#L337`](backend/src/modules/t3n/gateway.ts#L337) |
-| `buildInvocationPreimage` | Agent invocation binding | [`gateway.ts#L349`](backend/src/modules/t3n/gateway.ts#L349) |
-| `signAgentInvocation` | Agent co-signature | [`gateway.ts#L350`](backend/src/modules/t3n/gateway.ts#L350) |
-| `b64uEncodeBytes` | Base64url encoding for stored grant material | [`gateway.ts#L378-L384`](backend/src/modules/t3n/gateway.ts#L378-L384) |
-| `getScriptVersion` | Resolve `tee:user/contracts` + VaultPay versions | [`gateway.ts#L309`](backend/src/modules/t3n/gateway.ts#L309) |
-| `t3n.executeAndDecode` | `agent-auth-update` grant registration | [`gateway.ts#L353-L372`](backend/src/modules/t3n/gateway.ts#L353-L372) |
-| `revokeDelegation` | Revoke ADK grant on-chain | [`gateway.ts#L400-L405`](backend/src/modules/t3n/gateway.ts#L400-L405) |
-| `t3n.getAuditEvents` | T3N audit trail for agent proof | [`gateway.ts#L412`](backend/src/modules/t3n/gateway.ts#L412) |
+| `setEnvironment` | Target testnet/production | [`gateway.ts#L541-L547`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L541-L547) · [`scripts/lib/t3n-client.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/lib/t3n-client.mjs#L15) |
+| `setNodeUrl` | Optional custom node | [`gateway.ts#L546`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L546) |
+| `getNodeUrl` | Resolve T3N base URL | [`gateway.ts#L501`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L501) |
+| `loadWasmComponent` | WASM loader for `T3nClient` | [`gateway.ts#L524`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L524) |
+| `T3nClient` | Core client (handshake, auth, execute) | [`gateway.ts#L522-L528`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L522-L528) |
+| `TenantClient` | Tenant contracts, controls, delegated exec | [`gateway.ts#L508-L514`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L508-L514) |
+| `createEthAuthInput` | ETH-based DID authentication | [`gateway.ts#L133`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L133) |
+| `eth_get_address` | Derive address from private key | [`gateway.ts#L130`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L130) |
+| `metamask_sign` | `EthSign` handler for headless signing | [`gateway.ts#L526`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L526) |
+| `t3n.handshake()` | Session establishment | [`gateway.ts#L132`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L132) |
+| `t3n.authenticate()` | Bind session to DID | [`gateway.ts#L133`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L133) |
+| `tenant.contracts.register` | Publish WASM to tenant | [`scripts/register-contracts.mjs#L17`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/register-contracts.mjs#L17) |
+| `tenant.contracts.execute` | Invoke contract functions | [`gateway.ts#L472-L476`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L472-L476) |
+| `tenant.contracts.logs` | Contract execution logs | [`gateway.ts#L420`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L420) |
+| `tenant.executeControl("map-entry-set")` | KV map writes | [`gateway.ts#L461-L465`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L461-L465) |
+| `tenant.canonicalName` | Map / contract name resolution | [`gateway.ts#L462`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L462) |
+| `tenant.executeBusinessContract` | Agent-delegated `validate-and-pay` | [`gateway.ts#L200-L207`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L200-L207) |
+| `buildDelegationCredential` | ADK delegation VC payload | [`gateway.ts#L319-L334`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L319-L334) |
+| `canonicaliseCredential` | JCS canonical form | [`gateway.ts#L335`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L335) |
+| `signCredential` | User signature on delegation | [`gateway.ts#L337`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L337) |
+| `buildInvocationPreimage` | Agent invocation binding | [`gateway.ts#L349`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L349) |
+| `signAgentInvocation` | Agent co-signature | [`gateway.ts#L350`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L350) |
+| `b64uEncodeBytes` | Base64url encoding for stored grant material | [`gateway.ts#L378-L384`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L378-L384) |
+| `getScriptVersion` | Resolve `tee:user/contracts` + VaultPay versions | [`gateway.ts#L309`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L309) |
+| `t3n.executeAndDecode` | `agent-auth-update` grant registration | [`gateway.ts#L353-L372`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L353-L372) |
+| `revokeDelegation` | Revoke ADK grant on-chain | [`gateway.ts#L400-L405`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L400-L405) |
+| `t3n.getAuditEvents` | T3N audit trail for agent proof | [`gateway.ts#L412`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L412) |
 
 **SDK surfaces from requirements *not* wired in this build** (documented explicitly):
 
 | Surface | Status | Note |
 |---|---|---|
-| `DelegationCustodialClient` | Not used | Manual credential + `agent-auth-update` path instead — [`gateway.ts#createAgentGrant`](backend/src/modules/t3n/gateway.ts#L263-L392) |
-| `sign-sd-jwt-vc` | Not on testnet | Deterministic receipt hash fallback — [`t3n/service.ts#L26`](backend/src/modules/t3n/service.ts#L26) |
-| `outbox` | Not on testnet | App toasts + polling — [`useVaultPayApp.ts`](frontend/src/hooks/useVaultPayApp.ts) |
+| `DelegationCustodialClient` | Not used | Manual credential + `agent-auth-update` path instead — [`gateway.ts#createAgentGrant`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L263-L392) |
+| `sign-sd-jwt-vc` | Not on testnet | Deterministic receipt hash fallback — [`t3n/service.ts#L26`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/service.ts#L26) |
+| `outbox` | Not on testnet | App toasts + polling — [`useVaultPayApp.ts`](https://github.com/SamFelix03/T3Pay/blob/main/frontend/src/hooks/useVaultPayApp.ts) |
 | `fraud-signal-contract` / cross-tenant demo | Not implemented | Optional per requirements §TEE Contracts |
 
 ### ADK grant shape
 
-Scoped grant binds: **agent DID** → **contract tail** → **`validate-and-pay`** → **allowed hosts** → **mandate hash metadata** — [`constants.ts`](backend/src/config/constants.ts#L10-L14) · [`gateway.ts#L319-L346`](backend/src/modules/t3n/gateway.ts#L319-L346).
+Scoped grant binds: **agent DID** → **contract tail** → **`validate-and-pay`** → **allowed hosts** → **mandate hash metadata** — [`constants.ts`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/config/constants.ts#L10-L14) · [`gateway.ts#L319-L346`](https://github.com/SamFelix03/T3Pay/blob/main/backend/src/modules/t3n/gateway.ts#L319-L346).
 
 ### Operator scripts (T3N CLI)
 
 | Script | Purpose |
 |---|---|
-| [`scripts/t3n-auth-check.mjs`](scripts/t3n-auth-check.mjs) | Auth smoke test |
-| [`scripts/create-mandate-probe.mjs`](scripts/create-mandate-probe.mjs) | Mandate contract probe |
-| [`scripts/grant-agent.mjs`](scripts/grant-agent.mjs) | Standalone `agent-auth-update` |
-| [`scripts/contract-logs.mjs`](scripts/contract-logs.mjs) | Tail contract logs |
-| [`scripts/e2e-api.mjs`](scripts/e2e-api.mjs) | Full regression including revocation block |
+| [`scripts/t3n-auth-check.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/t3n-auth-check.mjs) | Auth smoke test |
+| [`scripts/create-mandate-probe.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/create-mandate-probe.mjs) | Mandate contract probe |
+| [`scripts/grant-agent.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/grant-agent.mjs) | Standalone `agent-auth-update` |
+| [`scripts/contract-logs.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/contract-logs.mjs) | Tail contract logs |
+| [`scripts/e2e-api.mjs`](https://github.com/SamFelix03/T3Pay/blob/main/scripts/e2e-api.mjs) | Full regression including revocation block |
 
 ---
 
