@@ -37,7 +37,7 @@ Check out how Terminal 3's Agent Dev Kit and T3N power your agents at [this sect
 
 ## Bug reports
 
-While building T3Pay on Terminal 3, I identified **7 bugs** and **8 documentation gaps** in the T3N platform, SDK, and official docs. Each item includes severity, T3Pay impact, workarounds, and a verification audit against the published documentation. The full list is in [`issues/bug-summary.md`](https://github.com/SamFelix03/T3Pay/blob/main/issues/bug-summary.md).
+While building T3Pay on Terminal 3, I documented **3 verified, reproducible bugs** and **4 major documentation gaps** in the T3N platform, SDK, and official docs. Bugs include step-by-step reproduction; doc gaps include T3Pay impact and a verification audit. The full list is in [`issues/bug-summary.md`](https://github.com/SamFelix03/T3Pay/blob/main/issues/bug-summary.md).
 
 ### Contracts & T3N artifacts
 
