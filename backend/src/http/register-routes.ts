@@ -1,4 +1,4 @@
-import { Router } from "./router";
+import { Router, sendHead } from "./router";
 import { registerActivityRoutes } from "../modules/activity/routes";
 import { registerAgentRoutes } from "../modules/agents/routes";
 import { registerAgentChatRoutes } from "../modules/agent-chat/routes";
@@ -16,6 +16,7 @@ import { registerVaultRoutes } from "../modules/vaults/routes";
 
 export function registerRoutes(router: Router): void {
   router.get("/health", () => ({ ok: true }));
+  router.head("/health", ({ res }) => sendHead(res, 200));
   registerUserRoutes(router);
   registerVaultRoutes(router);
   registerAgentRoutes(router);

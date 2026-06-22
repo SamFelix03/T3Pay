@@ -25,6 +25,10 @@ export class Router {
     this.add("PATCH", path, handler);
   }
 
+  head(path: string, handler: Handler): void {
+    this.add("HEAD", path, handler);
+  }
+
   handler(app: AppContext): http.RequestListener {
     return async (req, res) => {
       try {
@@ -72,6 +76,14 @@ export function sendJson(res: http.ServerResponse, status: number, body: unknown
     "cache-control": "no-store"
   });
   res.end(JSON.stringify(sanitize(body), null, 2));
+}
+
+export function sendHead(res: http.ServerResponse, status: number): void {
+  res.writeHead(status, {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store"
+  });
+  res.end();
 }
 
 function handleError(res: http.ServerResponse, error: unknown): void {
