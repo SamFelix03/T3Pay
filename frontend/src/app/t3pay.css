@@ -926,6 +926,17 @@ textarea:focus {
   color: var(--vp-danger);
 }
 
+.status-chip.verified,
+.status-chip.deterministic_hash {
+  background: color-mix(in oklch, var(--vp-success) 16%, var(--vp-card));
+  color: oklch(0.78 0.14 145);
+}
+
+.status-chip.stored {
+  background: var(--vp-surface);
+  color: var(--vp-muted);
+}
+
 .status-chip.pending,
 .status-chip.pending_approval,
 .status-chip.pending_approval {
@@ -3224,4 +3235,93 @@ button.vault-grid-card {
   .run-detail-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Receipt detail modal ─────────────────────────────────────────────── */
+
+.receipt-detail-modal {
+  width: min(720px, 100%);
+  max-height: min(88vh, 900px);
+  overflow: auto;
+}
+
+.receipt-detail-body {
+  display: grid;
+  gap: 18px;
+}
+
+.receipt-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-right: 28px;
+}
+
+.receipt-detail-title {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.receipt-detail-subtitle {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  color: var(--vp-muted);
+  line-height: 1.5;
+}
+
+.receipt-detail-section {
+  display: grid;
+  gap: 8px;
+}
+
+.receipt-detail-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--vp-muted);
+  line-height: 1.5;
+}
+
+.receipt-detail-json {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--vp-line);
+  background: var(--vp-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow: auto;
+  color: var(--vp-fg);
+}
+
+.receipt-detail-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+.receipt-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.receipt-detail-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.receipt-detail-metrics .metric-tile strong {
+  font-size: 1rem;
+}
+
+.receipt-detail-identifiers .metric-tile strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  word-break: break-all;
 }

@@ -204,10 +204,10 @@ function AppShellInner() {
               busy={app.busy}
             />
           )}
-          {app.view === "receipts" && (
+          {app.view === "receipts" && app.session && (
             <ReceiptsView
-              receipt={app.receipt}
-              activity={app.dashboard?.recentActivity ?? []}
+              userId={app.session.userId}
+              products={app.products}
               onVerify={app.verifyReceipt}
               busy={app.busy}
             />

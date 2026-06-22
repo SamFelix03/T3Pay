@@ -678,8 +678,10 @@ export function useVaultPayApp() {
       setReceipt(result.receipt);
       if (result.receipt.valid) toast.success("Receipt verified.", toastId);
       else toast.info("Receipt hash stored (demo mode).", toastId);
+      return result.receipt;
     } catch (error) {
       toast.error((error as Error).message, toastId);
+      return null;
     } finally {
       setBusy(false);
     }
